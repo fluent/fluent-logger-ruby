@@ -1,0 +1,28 @@
+= Fluent logger
+
+A structured event loger
+
+== Quick Start
+
+  require 'fluent-logger'   #gem install fluent-logger
+  
+  #Fluent.open('debug.myapp', 'localhost')  # log to fluent
+  Fluent.open(:console, STDOUT)             # log to console
+  
+  LoginEvent = Fluent.define_event(:user, :category=>'login')
+  AccessEvent = Fluent.define_event(:ip, :agent, :category=>'access')
+  
+  #=> category="login" user="name
+  LoginEvent.user('name').post
+  
+  #=> category="access" ip="127.0.0.1" agent="firefox"
+  AccessEvent.ip('127.0.0.1').agent('firefox').post
+
+
+Web site::  http://fluent.github.com/
+Documents:: http://fluent.github.com/doc/
+Source repository:: http://github.com/fluent
+Author:: Sadayuki Furuhashi
+Copyright:: (c) 2011 FURUHASHI Sadayuki
+License:: Apache License, Version 2.0
+
