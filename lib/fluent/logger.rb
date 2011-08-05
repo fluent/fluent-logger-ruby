@@ -103,6 +103,10 @@ module Logger
     @@default_logger ||= ConsoleLogger.new(STDOUT)
   end
 
+  def self.default=(logger)
+    @@default_logger = logger
+  end
+
   require 'fluent/logger/fluent'
   require 'fluent/logger/console'
   require 'fluent/logger/syslog'

@@ -65,11 +65,11 @@ class SimpleTest < Test::Unit::TestCase
 
     E5_User = E5_LOG.create_event(:name, :age)
     E5_Browser = E5_LOG.create_event(:host, :agent)
-
     E5_LoginEvent = E5_LOG.create_event(:action=>'login')
 
     e_user = E5_User.name('me').age(24)
-    e_user.with! E5_Browser.host('remoteip').agent('firefox')
+    e_browser = E5_Browser.host('remoteip').agent('firefox')
+    e_user.with!(e_browser)
 
     #=> action="login" name="me" age=24 host="remoteip" agent="firefox"
     E5_LoginEvent.with(e_user).post!
