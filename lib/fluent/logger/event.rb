@@ -20,98 +20,90 @@ module Logger
 
 
 class Event
-  KEYS = []
-  DEFAULT_VALUES = {}
-  LOGGER = nil
-
-  def initialize(logger=self.class::LOGGER)
-    @logger = logger || Logger.default
-    @map = self.class::DEFAULT_VALUES.dup
+  def initialize(link, map)
+    @link = link
+    @map = map
   end
 
-  attr_accessor :map
-
-  def +(e)
-    @map.merge!(e)
-    self
+  def to_hash(o={})
+    @link.to_hash(o)
+    o.merge!(@map)
+    o
   end
 
-  def [](k)
-    @map[k.to_sym]
+  def logger
+    @link.logger
   end
 
-  def []=(k, v)
-    @map[k.to_sym] = v
+  def logger=(logger)
+    @link.logger = logger
   end
 
   def post!
-    @logger.post_defined(self.class, @map)
+    logger.post(to_hash)
     self
   end
 
   alias post post!
 
   def with(a)
-    if a.is_a?(Class) && a.ancestors.include?(Event)
-      return (self.class + a).with(self)
-    end
-    map = case a
-      when Event
-        a.map
-      else
-        a
+    if a.is_a?(Event)
+      ma = MODULE()
+      mb = a.MODULE()
+      m = Module.new
+      m.module_eval do
+        include ma
+        include mb
+        define_method(:MODULE) { m }
       end
-    @map.merge!(map)
+      map = a.to_hash(to_hash)
+      e = TerminalEvent.new(LOGGER(), map)
+      e.extend(m)
+    else
+      map = a.to_hash
+      e = Event.new(self, map)
+      e.extend(MODULE())
+    end
+    e
+  end
+
+  alias + with
+
+  def with!(a)
+    if a.is_a?(Event)
+      self.extend a.MODULE()
+      a.to_hash(@map)
+    else
+      @map.merge!(a.to_hash)
+    end
     self
   end
 
-  class << self
-    def post!
-      new.post!
-    end
+  def create_event(*args)
+    self.with(LOGGER().create_event(*args))
+  end
 
-    alias post post!
+  def LOGGER
+    @link.LOGGER()
+  end
+end
 
-    def with(a)
-      if a.is_a?(Class) && a.ancestors.include?(Event)
-        return self + a
-      end
-      map = case a
-        when Event
-          a.map
-        else
-          a
-        end
 
-      nmap = self::DEFAULT_VALUES.merge(map)
-      name = "#{self.name}+#{map.keys.join('+')}"
+class TerminalEvent < Event
+  def initialize(logger, map)
+    @logger = logger
+    @map = map
+  end
 
-      c = Class.new(self) do
-        const_set(:DEFAULT_VALUES, nmap)
-      end
-      (class<<c;self;end).module_eval do
-        define_method(:name) do
-          name
-        end
-      end
+  def to_hash(o={})
+    o.merge!(@map)
+    o
+  end
 
-      c
-    end
+  attr_accessor :logger
 
-    def +(other)
-      keys = self::KEYS + other::KEYS
-      map = self::DEFAULT_VALUES.merge(other::DEFAULT_VALUES)
-      name = "#{self.name}+#{other.name}"
-
-      c = self::LOGGER.define_event(*(keys << map))
-      (class<<c;self;end).module_eval do
-        define_method(:name) do
-          name
-        end
-      end
-
-      c
-    end
+  def LOGGER
+    @logger
   end
 end
 

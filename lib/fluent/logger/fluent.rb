@@ -108,9 +108,9 @@ class FluentLogger < LoggerBase
       logger.close
     }
   end
-
-  register_logger :fluent
 end
+
+LOGGER_TYPES[:fluent] = FluentLogger
 
 
 end

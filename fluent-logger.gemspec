@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{fluent-logger}
-  s.version = "0.1.0"
+  s.version = "0.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Sadayuki Furuhashi"]
-  s.date = %q{2011-08-04}
+  s.date = %q{2011-08-05}
   s.email = %q{frsyuki@gmail.com}
   s.extra_rdoc_files = [
     "ChangeLog",
@@ -22,13 +22,20 @@ Gem::Specification.new do |s|
      "lib/fluent/logger/console.rb",
      "lib/fluent/logger/event.rb",
      "lib/fluent/logger/fluent.rb",
-     "lib/fluent/logger/syslog.rb"
+     "lib/fluent/logger/syslog.rb",
+     "lib/fluent/logger/version.rb",
+     "test/simple_test.rb",
+     "test/test_helper.rb"
   ]
   s.homepage = %q{http://fluent.github.com/}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{Structured event logger}
+  s.test_files = [
+    "test/simple_test.rb",
+     "test/test_helper.rb"
+  ]
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION

@@ -49,9 +49,9 @@ class ConsoleLogger < TextLogger
     @io.close
     self
   end
-
-  register_logger :console
 end
+
+LOGGER_TYPES[:console] = ConsoleLogger
 
 
 end

@@ -120,9 +120,9 @@ class SyslogLogger < TextLogger
     Syslog.close
     self
   end
-
-  register_logger :syslog
 end
+
+LOGGER_TYPES[:syslog] = SyslogLogger
 
 
 end
