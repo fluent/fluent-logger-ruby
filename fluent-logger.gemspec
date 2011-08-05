@@ -23,7 +23,9 @@ Gem::Specification.new do |s|
      "lib/fluent/logger/event.rb",
      "lib/fluent/logger/fluent.rb",
      "lib/fluent/logger/syslog.rb",
+     "lib/fluent/logger/test.rb",
      "lib/fluent/logger/version.rb",
+     "test/create_event_test.rb",
      "test/simple_test.rb",
      "test/test_helper.rb"
   ]
@@ -33,7 +35,8 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{Structured event logger}
   s.test_files = [
-    "test/simple_test.rb",
+    "test/create_event_test.rb",
+     "test/simple_test.rb",
      "test/test_helper.rb"
   ]
 

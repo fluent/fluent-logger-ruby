@@ -104,8 +104,9 @@ module Logger
   end
 
   require 'fluent/logger/fluent'
-  require 'fluent/logger/syslog'
   require 'fluent/logger/console'
+  require 'fluent/logger/syslog'
+  require 'fluent/logger/test'
 end
 
 
