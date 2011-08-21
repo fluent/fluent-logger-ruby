@@ -1,9 +1,15 @@
 
+Release 0.3.0 - 2011/08/21
+
+  * Added 'tag' for event logs
+
+
 Release 0.2.0 - 2011/08/05
 
   * Redesigned Event class
   * Added TestLogger (Fluent.open(:test))
   * Added test programs
+
 
 Release 0.1.0 - 2011/08/04
 
