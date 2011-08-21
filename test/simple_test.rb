@@ -2,10 +2,10 @@ require File.dirname(__FILE__)+'/test_helper'
 
 class SimpleTest < Test::Unit::TestCase
   it 'singleton' do
-    Fluent.open(:console, STDOUT)
+    Fluent::Logger::ConsoleLogger.open(STDOUT)
 
-    AccessEvent = Fluent.create_event(:agent, :action=>'access')
-    LoginEvent = Fluent.create_event(:user, :action=>'login')
+    AccessEvent = Fluent::Logger.create_event('e1', :agent, :action=>'access')
+    LoginEvent = Fluent::Logger.create_event('e2', :user, :action=>'login')
 
     #=> action="access" agent="foo"
     AccessEvent.agent('foo').post!
@@ -15,10 +15,10 @@ class SimpleTest < Test::Unit::TestCase
   end
 
   it 'local' do
-    E2_LOG = Fluent.new(:console, STDOUT)
+    E2_LOG = Fluent::Logger::ConsoleLogger.new(STDOUT)
 
-    E2_AccessEvent = E2_LOG.create_event(:agent, :action=>'access')
-    E2_LoginEvent = E2_LOG.create_event(:user, :action=>'login')
+    E2_AccessEvent = E2_LOG.create_event('e1', :agent, :action=>'access')
+    E2_LoginEvent = E2_LOG.create_event('e2', :user, :action=>'login')
 
     #=> action="access" agent="foo"
     E2_AccessEvent.agent('foo').post!
@@ -28,11 +28,11 @@ class SimpleTest < Test::Unit::TestCase
   end
 
   it 'combine' do
-    E3_LOG = Fluent.new(:console, STDOUT)
+    E3_LOG = Fluent::Logger::ConsoleLogger.new(STDOUT)
 
-    E3_User = E3_LOG.create_event(:name, :age)
-    E3_LoginEvent = E3_LOG.create_event(:action=>'login')
-    E3_BuyEvent = E3_LOG.create_event(:item, :action=>'login')
+    E3_User = E3_LOG.create_event('e1', :name, :age)
+    E3_LoginEvent = E3_LOG.create_event('e2', :action=>'login')
+    E3_BuyEvent = E3_LOG.create_event('e3', :item, :action=>'login')
 
     e_user = E3_User.name('me').age(24)
 
@@ -44,11 +44,11 @@ class SimpleTest < Test::Unit::TestCase
   end
 
   it 'update' do
-    E4_LOG = Fluent.new(:console, STDOUT)
+    E4_LOG = Fluent::Logger::ConsoleLogger.new(STDOUT)
 
-    E4_User = E4_LOG.create_event(:name, :age)
-    E4_AgeChangeEvent = E4_LOG.create_event(:changed_age, :action=>'age_change')
-    E4_BuyEvent = E4_LOG.create_event(:item, :action=>'buy')
+    E4_User = E4_LOG.create_event('e1', :name, :age)
+    E4_AgeChangeEvent = E4_LOG.create_event('e2', :changed_age, :action=>'age_change')
+    E4_BuyEvent = E4_LOG.create_event('e3', :item, :action=>'buy')
 
     e_user = E4_User.name('me').age(24)
 
@@ -61,11 +61,11 @@ class SimpleTest < Test::Unit::TestCase
   end
 
   it 'combine_update' do
-    E5_LOG = Fluent.new(:console, STDOUT)
+    E5_LOG = Fluent::Logger::ConsoleLogger.new(STDOUT)
 
-    E5_User = E5_LOG.create_event(:name, :age)
-    E5_Browser = E5_LOG.create_event(:host, :agent)
-    E5_LoginEvent = E5_LOG.create_event(:action=>'login')
+    E5_User = E5_LOG.create_event('e1', :name, :age)
+    E5_Browser = E5_LOG.create_event('e2', :host, :agent)
+    E5_LoginEvent = E5_LOG.create_event('e3', :action=>'login')
 
     e_user = E5_User.name('me').age(24)
     e_browser = E5_Browser.host('remoteip').agent('firefox')
