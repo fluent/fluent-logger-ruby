@@ -51,8 +51,6 @@ class ConsoleLogger < TextLogger
   end
 end
 
-LOGGER_TYPES[:console] = ConsoleLogger
-
 
 end
 end

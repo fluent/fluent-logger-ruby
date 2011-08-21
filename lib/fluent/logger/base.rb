@@ -20,7 +20,11 @@ module Logger
 
 
 class LoggerBase
-  def create_event(*args)
+  def self.open(*args, &block)
+    Fluent::Logger.open(self, *args, &block)
+  end
+
+  def create_event(tag, *args)
     map = {}
     keys = []
     args.each {|a|
@@ -48,12 +52,12 @@ class LoggerBase
       define_method(:MODULE) { m }
     end
 
-    e = TerminalEvent.new(self, map)
+    e = TerminalEvent.new(self, tag, map)
     e.extend(m)
     e
   end
 
-  #def post(map)
+  #def post(tag, map)
   #end
 
   #def close(map)
@@ -67,8 +71,8 @@ class TextLogger < LoggerBase
     @time_format = "%b %e %H:%M:%S"
   end
 
-  def post(map)
-    a = [Time.now.strftime(@time_format), ":"]
+  def post(tag, map)
+    a = [Time.now.strftime(@time_format), " ", tag, ":"]
     map.each_pair {|k,v|
       a << " #{k}="
       a << v.to_json

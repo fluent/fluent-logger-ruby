@@ -18,29 +18,7 @@
 module Fluent
 
 
-def self.new(*args)
-  Logger.new(*args)
-end
-
-def self.open(*args)
-  Logger.open(*args)
-end
-
-def self.close
-  Logger.close
-end
-
-def self.create_event(*args)
-  Logger.create_event(*args)
-end
-
-def self.post(map)
-  Logger.post(map)
-end
-
-
 module Logger
-  require 'fluent/logger/version'
   require 'fluent/logger/event'
   require 'fluent/logger/base'
 
@@ -55,8 +33,8 @@ module Logger
       INSTANCE
     end
 
-    def post(map)
-      Fluent::Logger.default.post(map)
+    def post(tag, map)
+      Fluent::Logger.default.post(tag, map)
     end
 
     def close
@@ -65,17 +43,13 @@ module Logger
   end
 
   @@default_logger = nil
-  LOGGER_TYPES = {}
 
   def self.new(*args)
-    if args.first.is_a?(Symbol)
-      t = args.shift
-      type = LOGGER_TYPES[t]
-      unless type
-        raise ArgumentError, "Unknown logger type '#{t}'"
-      end
+    if args.first.is_a?(Class) && args.first.ancestors.include?(LoggerBase)
+      type = args.shift
+    else
+      type = FluentLogger
     end
-    type ||= FluentLogger
     type.new(*args)
   end
 
@@ -95,8 +69,8 @@ module Logger
     DefaultLogger.instance.create_event(*args)
   end
 
-  def self.post(map)
-    DefaultLogger.instance.post(map)
+  def self.post(tag, map)
+    DefaultLogger.instance.post(tag, map)
   end
 
   def self.default
@@ -107,10 +81,10 @@ module Logger
     @@default_logger = logger
   end
 
-  require 'fluent/logger/fluent'
-  require 'fluent/logger/console'
-  require 'fluent/logger/syslog'
-  require 'fluent/logger/test'
+  autoload :FluentLogger, 'fluent/logger/fluent'
+  autoload :ConsoleLogger, 'fluent/logger/console'
+  autoload :SyslogLogger, 'fluent/logger/syslog'
+  autoload :TestLogger, 'fluent/logger/test'
 end
 
 

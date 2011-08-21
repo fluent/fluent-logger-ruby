@@ -113,7 +113,7 @@ class SyslogLogger < TextLogger
   #end
 
   def post_text(text)
-    Syslog.log(@level, text)
+    Syslog.log(@level, "%s", text)
   end
 
   def close
@@ -121,8 +121,6 @@ class SyslogLogger < TextLogger
     self
   end
 end
-
-LOGGER_TYPES[:syslog] = SyslogLogger
 
 
 end

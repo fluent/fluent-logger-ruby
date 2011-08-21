@@ -31,6 +31,10 @@ class Event
     o
   end
 
+  def tag
+    @link.tag
+  end
+
   def logger
     @link.logger
   end
@@ -39,8 +43,8 @@ class Event
     @link.logger = logger
   end
 
-  def post!
-    logger.post(to_hash)
+  def post!(with_tag=tag)
+    logger.post(with_tag, to_hash)
     self
   end
 
@@ -57,7 +61,7 @@ class Event
         define_method(:MODULE) { m }
       end
       map = a.to_hash(to_hash)
-      e = TerminalEvent.new(LOGGER(), map)
+      e = TerminalEvent.new(LOGGER(), tag, map)
       e.extend(m)
     else
       map = a.to_hash
@@ -90,8 +94,9 @@ end
 
 
 class TerminalEvent < Event
-  def initialize(logger, map)
+  def initialize(logger, tag, map)
     @logger = logger
+    @tag = tag
     @map = map
   end
 
@@ -100,6 +105,7 @@ class TerminalEvent < Event
     o
   end
 
+  attr_accessor :tag
   attr_accessor :logger
 
   def LOGGER

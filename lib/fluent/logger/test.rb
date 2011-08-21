@@ -30,9 +30,12 @@ class TestLogger < LoggerBase
   attr_reader :queue
   attr_reader :close_called
 
-  def post(map)
+  def post(tag, map)
     while @queue.size > @max
       @queue.shift
+    end
+    (class<<map;self;end).module_eval do
+      define_method(:tag) { tag }
     end
     @queue << map
   end
@@ -45,8 +48,6 @@ class TestLogger < LoggerBase
     @close_called > 0
   end
 end
-
-LOGGER_TYPES[:test] = TestLogger
 
 
 end

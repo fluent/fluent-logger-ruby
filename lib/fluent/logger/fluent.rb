@@ -45,9 +45,9 @@ class FluentLogger < LoggerBase
 
   attr_accessor :limit, :logger
 
-  def post(map)
+  def post(tag, map)
     time = Time.now.to_i
-    write [@tag, time, map]
+    write ["#{@tag}.#{tag}", time, map]
   end
 
   def close
@@ -61,23 +61,23 @@ class FluentLogger < LoggerBase
   end
 
   private
-  def write(e)
-    msg = e.to_msgpack
+  def write(msg)
+    data = msg.to_msgpack
     @mon.synchronize {
       if @pending
-        @pending << msg
-        msg = @pending
+        @pending << data
+        data = @pending
       end
       begin
         unless @con
           connect!
         end
         while true
-          n = @con.syswrite(msg)
-          if n >= msg.bytesize
+          n = @con.syswrite(data)
+          if n >= data.bytesize
             break
           end
-          msg = msg[n..-1]
+          data = data[n..-1]
         end
         @pending = nil
       rescue
@@ -87,7 +87,7 @@ class FluentLogger < LoggerBase
             @pending = nil
           end
         else
-          @pending = msg
+          @pending = data
         end
         @con.close if @con
         @con = nil
@@ -109,8 +109,6 @@ class FluentLogger < LoggerBase
     }
   end
 end
-
-LOGGER_TYPES[:fluent] = FluentLogger
 
 
 end
