@@ -1,4 +1,10 @@
 
+Release 0.3.1 - 2011/08/28
+
+  * FluentLogger#initialize doesn't raise error when connection is failed.
+    Instead, it tries to reconnect.
+
+
 Release 0.3.0 - 2011/08/21
 
   * Added 'tag' for event logs
