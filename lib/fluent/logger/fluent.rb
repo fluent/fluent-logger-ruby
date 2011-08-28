@@ -35,10 +35,16 @@ class FluentLogger < LoggerBase
     @pending = nil
     @host = host
     @port = port
-    connect!
 
     @limit = BUFFER_LIMIT
     @logger = ::Logger.new(STDERR)
+
+    begin
+      connect!
+    rescue
+      @logger.error "Failed to connect fluentd: #{$!}"
+      @logger.error "Connection will be retried."
+    end
 
     FluentLogger.close_on_exit(self)
   end
