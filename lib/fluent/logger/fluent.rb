@@ -20,6 +20,25 @@ module Logger
 
 
 class FluentLogger < LoggerBase
+  module Finalizable
+    require 'delegate'
+    def new(*args, &block)
+      obj = allocate
+      obj.instance_eval { initialize(*args, &block) }
+      dc = DelegateClass(obj.class).new(obj)
+      ObjectSpace.define_finalizer(dc, finalizer(obj))
+      dc
+    end
+
+    def finalizer(obj)
+      fin = obj.method(:finalize)
+      proc {|id|
+        fin.call
+      }
+    end
+  end
+  extend Finalizable
+
   BUFFER_LIMIT = 8*1024*1024
   RECONNECT_WAIT = 0.5
   RECONNECT_WAIT_INCR_RATE = 1.5
@@ -78,6 +97,10 @@ class FluentLogger < LoggerBase
       @pending = nil
     }
     self
+  end
+
+  def finalize
+    close
   end
 
   private
