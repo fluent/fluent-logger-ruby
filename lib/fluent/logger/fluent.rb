@@ -21,20 +21,29 @@ module Logger
 
 class FluentLogger < LoggerBase
   BUFFER_LIMIT = 8*1024*1024
+  RECONNECT_WAIT = 0.5
+  RECONNECT_WAIT_INCR_RATE = 1.5
+  RECONNECT_WAIT_MAX = 60
+  RECONNECT_WAIT_MAX_COUNT =
+      (1..100).inject(RECONNECT_WAIT_MAX / RECONNECT_WAIT) {|r,i|
+        break i + 1 if r < RECONNECT_WAIT_INCR_RATE
+        r / RECONNECT_WAIT_INCR_RATE
+      }
 
-  def initialize(tag, host, port=24224)
+  def initialize(tag_prefix, host, port=24224)
     super()
     require 'msgpack'
     require 'socket'
     require 'monitor'
     require 'logger'
-    @mon = Monitor.new
 
-    @tag = tag
-
-    @pending = nil
+    @tag_prefix = tag_prefix
     @host = host
     @port = port
+
+    @mon = Monitor.new
+    @pending = nil
+    @connect_error_history = []
 
     @limit = BUFFER_LIMIT
     @logger = ::Logger.new(STDERR)
@@ -45,24 +54,29 @@ class FluentLogger < LoggerBase
       @logger.error "Failed to connect fluentd: #{$!}"
       @logger.error "Connection will be retried."
     end
-
-    FluentLogger.close_on_exit(self)
   end
 
   attr_accessor :limit, :logger
 
   def post(tag, map)
     time = Time.now.to_i
-    write ["#{@tag}.#{tag}", time, map]
+    tag = "#{@tag_prefix}.#{tag}" if @tag_prefix
+    write [tag, time, map]
   end
 
   def close
-    if @pending
-      @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}")
-    end
-    @con.close if @con
-    @con = nil
-    @pending = nil
+    @mon.synchronize {
+      if @pending
+        begin
+          send_data(@pending)
+        rescue
+          @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
+        end
+      end
+      @con.close if @con
+      @con = nil
+      @pending = nil
+    }
     self
   end
 
@@ -72,28 +86,29 @@ class FluentLogger < LoggerBase
     @mon.synchronize {
       if @pending
         @pending << data
-        data = @pending
+      else
+        @pending = data
       end
+
+      # suppress reconnection burst
+      if !@connect_error_history.empty? && @pending.bytesize <= @limit
+        if (sz = @connect_error_history.size) < RECONNECT_WAIT_MAX_COUNT
+          suppress_sec = RECONNECT_WAIT * (RECONNECT_WAIT_INCR_RATE ** (sz - 1))
+        else
+          suppress_sec = RECONNECT_WAIT_MAX
+        end
+        if Time.now.to_i - @connect_error_history.last < suppress_sec
+          return
+        end
+      end
+
       begin
-        unless @con
-          connect!
-        end
-        while true
-          n = @con.syswrite(data)
-          if n >= data.bytesize
-            break
-          end
-          data = data[n..-1]
-        end
+        send_data(@pending)
         @pending = nil
       rescue
-        if @pending
-          if @pending.bytesize > @limit
-            @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}")
-            @pending = nil
-          end
-        else
-          @pending = data
+        if @pending.bytesize > @limit
+          @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
+          @pending = nil
         end
         @con.close if @con
         @con = nil
@@ -101,18 +116,28 @@ class FluentLogger < LoggerBase
     }
   end
 
+  def send_data(data)
+    unless @con
+      connect!
+    end
+    while true
+      n = @con.syswrite(data)
+      if n >= data.bytesize
+        break
+      end
+      data = data[n..-1]
+    end
+  end
+
   def connect!
     @con = TCPSocket.new(@host, @port)
-  end
-
-  def self.close_on_exit(logger)
-    ObjectSpace.define_finalizer(logger, self.finalizer(logger))
-  end
-
-  def self.finalizer(logger)
-    proc {
-      logger.close
-    }
+    @connect_error_history.clear
+  rescue
+    @connect_error_history << Time.now.to_i
+    if @connect_error_history.size > RECONNECT_WAIT_MAX_COUNT
+      @connect_error_history.shift
+    end
+    raise
   end
 end
 
