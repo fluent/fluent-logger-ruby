@@ -21,14 +21,15 @@ class InstanceTest < Test::Unit::TestCase
   end
 
   it 'post' do
+    tag = 'mytag'
     g1 = Fluent::Logger::TestLogger.new
 
-    g1.post :k1=>'v1'
+    g1.post tag, :k1=>'v1'
     assert_equal g1.queue.last, {:k1=>'v1'}
 
     g2 = Fluent::Logger::TestLogger.open
 
-    Fluent::Logger.post :k2=>'v2'
+    Fluent::Logger.post tag, :k2=>'v2'
     assert_equal g2.queue.last, {:k2=>'v2'}
   end
 end
