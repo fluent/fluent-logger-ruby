@@ -1,6 +1,6 @@
 
 source :rubygems
 
-gem "jeweler"
+gem "simplecov", :require => false
 
 gemspec
