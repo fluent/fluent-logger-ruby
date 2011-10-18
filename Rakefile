@@ -1,6 +1,6 @@
-require 'rake'
-require 'rake/testtask'
-require 'rake/clean'
+
+require 'bundler'
+Bundler::GemHelper.install_tasks
 
 begin
   require 'jeweler'
@@ -24,10 +24,26 @@ rescue LoadError
   puts "Jeweler not available. Install it with: gem install jeweler"
 end
 
+require 'rake/testtask'
+
 Rake::TestTask.new(:test) do |t|
   t.test_files = Dir['test/*_test.rb']
   t.ruby_opts = ['-rubygems'] if defined? Gem
-  t.ruby_opts << '-I.'
+  t.ruby_opts << '-I.' << '-Ilib' << '-Itest'
+  t.verbose = true
+end
+
+task :coverage do |t|
+  require 'simplecov'
+  SimpleCov.start do 
+    add_filter 'test/'
+  end
+  Rake::Task["test"].invoke
+  require 'pathname'
+  $LOAD_PATH << '.'
+  Pathname.glob('lib/**/*.rb').each do |file|
+    require file.to_s.sub(/\.rb$/, '')
+  end
 end
 
 VERSION_FILE = "lib/fluent/logger/version.rb"
