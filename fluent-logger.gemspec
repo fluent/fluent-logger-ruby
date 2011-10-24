@@ -33,4 +33,6 @@ EOF
   gem.add_dependency 'msgpack', '~> 0.4.4'
   gem.add_dependency 'json', '>= 1.4.3'
   gem.add_development_dependency 'rake', '>= 0.9.2'
+  gem.add_development_dependency 'rspec', '>= 2.7.0'
+  gem.add_development_dependency 'timecop', '>= 0.3.5'
 end

@@ -17,10 +17,12 @@
 #
 module Fluent
 
-
 module Logger
-  require 'fluent/logger/event'
-  require 'fluent/logger/base'
+  autoload :ConsoleLogger , 'fluent/logger/console_logger'
+  autoload :FluentLogger  , 'fluent/logger/fluent_logger'
+  autoload :LoggerBase    , 'fluent/logger/logger_base'
+  autoload :TestLogger    , 'fluent/logger/test_logger'
+  autoload :TextLogger    , 'fluent/logger/text_logger'
 
   class DefaultLogger < LoggerBase
     INSTANCE = self.new
@@ -65,10 +67,6 @@ module Logger
     end
   end
 
-  def self.create_event(*args)
-    DefaultLogger.instance.create_event(*args)
-  end
-
   def self.post(tag, map)
     DefaultLogger.instance.post(tag, map)
   end
@@ -80,13 +78,8 @@ module Logger
   def self.default=(logger)
     @@default_logger = logger
   end
-
-  autoload :FluentLogger, 'fluent/logger/fluent'
-  autoload :ConsoleLogger, 'fluent/logger/console'
-  autoload :SyslogLogger, 'fluent/logger/syslog'
-  autoload :TestLogger, 'fluent/logger/test'
 end
-
 
 end
 
+p Fluent::Logger::TextLogger

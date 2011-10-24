@@ -18,53 +18,6 @@
 module Fluent
 module Logger
 
-
-class LoggerBase
-  def self.open(*args, &block)
-    Fluent::Logger.open(self, *args, &block)
-  end
-
-  def create_event(tag, *args)
-    map = {}
-    keys = []
-    args.each {|a|
-      case a
-      when Hash
-        a.each_pair {|k,v|
-          keys << k.to_sym
-          map[k.to_sym] = v
-        }
-      else
-        keys << a.to_sym
-      end
-    }
-
-    m = Module.new
-    m.module_eval do
-      keys.each {|key|
-        define_method(key) do |v|
-          with(key=>v)
-        end
-        define_method(:"#{key}!") do |v|
-          with!(key=>v)
-        end
-      }
-      define_method(:MODULE) { m }
-    end
-
-    e = TerminalEvent.new(self, tag, map)
-    e.extend(m)
-    e
-  end
-
-  #def post(tag, map)
-  #end
-
-  #def close(map)
-  #end
-end
-
-
 class TextLogger < LoggerBase
   def initialize
     require 'json'
@@ -79,11 +32,7 @@ class TextLogger < LoggerBase
     }
     post_text a.join
   end
-
-  #def post_text(text)
-  #end
 end
-
 
 end
 end

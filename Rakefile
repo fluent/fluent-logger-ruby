@@ -2,26 +2,16 @@
 require 'bundler'
 Bundler::GemHelper.install_tasks
 
-require 'rake/testtask'
+require 'rspec/core'
+require 'rspec/core/rake_task'
 
-Rake::TestTask.new(:test) do |test|
-  test.libs << 'lib' << 'test'
-  test.test_files = FileList['test/*_test.rb']
-  test.verbose = true
+RSpec::Core::RakeTask.new(:spec) do |spec|
+  spec.pattern = FileList['spec/**/*_spec.rb']
 end
 
 task :coverage do |t|
-  require 'simplecov'
-  SimpleCov.start do 
-    add_filter 'test/'
-    add_filter 'pkg/'
-  end
-  Rake::Task["test"].invoke
-  require 'pathname'
-  $LOAD_PATH << '.'
-  Pathname.glob('lib/**/*.rb').each do |file|
-    require file.to_s.sub(/\.rb$/, '')
-  end
+  ENV['SIMPLE_COV'] = '1'
+  Rake::Task["spec"].invoke
 end
 
 task :default => :build

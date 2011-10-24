@@ -18,39 +18,17 @@
 module Fluent
 module Logger
 
-
-class ConsoleLogger < TextLogger
-  def initialize(out)
-    super()
-    require 'time'
-
-    if out.is_a?(String)
-      @io = File.open(out, "a")
-      @on_reopen = Proc.new { @io.reopen(out, "a") }
-    elsif out.respond_to?(:write)
-      @io = out
-      @on_reopen = Proc.new { }
-    else
-      raise "Invlaid output: #{out.inspect}"
-    end
+class LoggerBase
+  def self.open(*args, &block)
+    Fluent::Logger.open(self, *args, &block)
   end
 
-  attr_accessor :time_format
+  #def post(tag, map)
+  #end
 
-  def reopen!
-    @on_reopen.call
-  end
-
-  def post_text(text)
-    @io.puts text
-  end
-
-  def close
-    @io.close
-    self
-  end
+  #def close(map)
+  #end
 end
-
 
 end
 end
