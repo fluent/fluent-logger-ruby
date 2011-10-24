@@ -14,6 +14,7 @@ task :coverage do |t|
   require 'simplecov'
   SimpleCov.start do 
     add_filter 'test/'
+    add_filter 'pkg/'
   end
   Rake::Task["test"].invoke
   require 'pathname'
