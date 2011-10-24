@@ -8,92 +8,34 @@ A structured event loger
 
     require 'fluent-logger'
     
-    EventLogger = Fluent::Logger::ConsoleLogger.new(STDOUT)
+    log = Fluent::Logger::FluentLogger.new(nil, 'localhost', 24224)
     
-    module Event
-      AccessEvent = EventLogger.create_event('access', :agent, :action=>'access')
-    end
-    
-    #=> access: action="access" agent="foo"
-    Event::AccessEvent.agent('foo').post!
-
+    log.post("myapp.access", {"agent=>"foo"})
+    #=> myapp.access {"agent":"foo"}
 
 === Singleton
 
     require 'fluent-logger'
     
-    Fluent::Logger::ConsoleLogger.open(STDOUT)
+    Fluent::Logger::FluentLogger.open(nil, 'localhost', 24224)
     
-    module Event
-      AccessEvent = Fluent::Logger.create_event('access', :agent, :action=>'access')
-    end
-    
-    #=> access: action="access" agent="foo"
-    Event::AccessEvent.agent('foo').post!
+    Fluent::Logger.post("myapp.access", {"agent=>"foo"})
+    #=> myapp.access {"agent":"foo"}
 
-
-=== Combine events
+=== Tag prefix
 
     require 'fluent-logger'
     
-    EventLogger = Fluent::Logger::ConsoleLogger.new(STDOUT)
+    log = Fluent::Logger::FluentLogger.new('myapp', 'localhost', 24224)
     
-    module Event
-      User = EventLogger.create_event('user', :name, :age)
-      LoginEvent = EventLogger.create_event('login', :action=>'login')
-      BuyEvent = EventLogger.create_event('buy', :item, :action=>'login')
-    end
-    
-    e_user = Event::User.name('me').age(24)
-    
-    #=> login: action="login" name="me" age=24
-    Event::LoginEvent.with(e_user).post!
-    
-    #=> buy: action="login" name="me" age=24 item="item01"
-    Event::BuyEvent.with(e_user).item("item01").post!
-
-=== Update created events
-
-    require 'fluent-logger'
-    
-    EventLogger = Fluent::Logger::ConsoleLogger.new(STDOUT)
-    
-    module Event
-      User = EventLogger.create_event('user', :name, :age)
-      AgeChangeEvent = EventLogger.create_event('age_change', :changed_age, :action=>'age_change')
-      BuyEvent = EventLogger.create_event('buy', :item, :action=>'buy')
-    end
-    
-    e_user = User.name('me').age(24)
-    
-    #=> age_change: action="age_change" name="me" age=24 changed_age=25
-    Event::AgeChangeEvent.with(e_user).changed_age(25).post!
-    e_user.age!(25)
-    
-    #=> buy: action="buy" name="me" age=25 item="item01"
-    Event::BuyEvent.with(e_user).item("item01").post!
-
-=== Update created events by combining
-
-    require 'fluent-logger'
-    
-    EventLogger = Fluent::Logger::ConsoleLogger.new(STDOUT)
-    
-    module Event
-      User = EventLogger.create_event('user', :name, :age)
-      Browser = EventLogger.create_event('browser', :host, :agent)
-      LoginEvent = EventLogger.create_event('login', :action=>'login')
-    end
-    
-    e_user = Event::User.name('me').age(24)
-    e_browser = Event::Browser.host('remoteip').agent('firefox')
-    e_user.with!(e_browser)
-    
-    #=> login: action="login" name="me" age=24 host="remoteip" agent="firefox"
-    Event::LoginEvent.with(e_user).post!
-
+    log.post("access", {"agent=>"foo"})
+    #=> myapp.access {"agent":"foo"}
 
 == Loggers
+
+=== Fluent
+
+    Fluent::Logger::FluentLogger.open('tag_prefix', 'host', port=24224)
 
 === Console
 
@@ -103,14 +45,10 @@ A structured event loger
 
     Fluent::Logger::SyslogLogger.open(ident=$0, level=:info)
 
-=== Fluent
-
-    Fluent::Logger::FluentLogger.open('tag_prefix', 'host', port=24224)
-
 
 Web site::  http://fluent.github.com/
 Documents:: http://fluent.github.com/doc/
-Source repository:: http://github.com/fluent
+Source repository:: https://github.com/fluent/fluent-logger-ruby
 Author:: Sadayuki Furuhashi
 Copyright:: (c) 2011 FURUHASHI Sadayuki
 License:: Apache License, Version 2.0
