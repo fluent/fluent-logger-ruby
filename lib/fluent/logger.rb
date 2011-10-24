@@ -81,5 +81,3 @@ module Logger
 end
 
 end
-
-p Fluent::Logger::TextLogger
