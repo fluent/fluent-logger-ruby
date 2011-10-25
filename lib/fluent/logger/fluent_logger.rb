@@ -49,23 +49,37 @@ class FluentLogger < LoggerBase
         r / RECONNECT_WAIT_INCR_RATE
       }
 
-  def initialize(tag_prefix, host, port=24224)
+  def initialize(tag_prefix, *args)
     super()
     require 'msgpack'
     require 'socket'
     require 'monitor'
     require 'logger'
 
+    options = {
+      :host => 'localhost',
+      :port => 24224
+    }
+
+    case args.first
+    when String, Symbol
+      # backward compatible
+      options[:host] = args[0]
+      options[:port] = args[1] if args[1]
+    when Hash
+      options.update args.first
+    end
+
     @tag_prefix = tag_prefix
-    @host = host
-    @port = port
+    @host = options[:host]
+    @port = options[:port]
 
     @mon = Monitor.new
     @pending = nil
     @connect_error_history = []
 
-    @limit = BUFFER_LIMIT
-    @logger = ::Logger.new(STDERR)
+    @limit = options[:buffer_limit] || BUFFER_LIMIT
+    @logger = options[:logger] || ::Logger.new(STDERR)
 
     begin
       connect!
@@ -92,11 +106,15 @@ class FluentLogger < LoggerBase
           @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
         end
       end
-      @con.close if @con
+      @con.close if connect?
       @con = nil
       @pending = nil
     }
     self
+  end
+
+  def connect?
+    !!@con
   end
 
   def finalize
@@ -133,14 +151,14 @@ class FluentLogger < LoggerBase
           @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
           @pending = nil
         end
-        @con.close if @con
+        @con.close if connect?
         @con = nil
       end
     }
   end
 
   def send_data(data)
-    unless @con
+    unless connect?
       connect!
     end
     while true

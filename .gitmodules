@@ -1,0 +1,3 @@
+[submodule "vendor/fluentd"]
+	path = vendor/fluentd
+	url = git://github.com/fluent/fluentd.git

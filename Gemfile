@@ -1,6 +1,8 @@
 
 source :rubygems
 
-gem "simplecov", :require => false
-
 gemspec
+
+gem "simplecov", :require => false
+gem "fluentd", :path => 'vendor/fluentd' if RUBY_VERSION >= "1.9.2"
+

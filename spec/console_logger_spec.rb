@@ -28,9 +28,9 @@ describe Fluent::Logger::ConsoleLogger do
 
   context "Filename output" do
     let(:path) {
-      tmp = Tempfile.new('fluent-logger')
-      filename = tmp.path
-      tmp.close
+      @tmp = Tempfile.new('fluent-logger') # ref instance var because Tempfile.close(true) check GC
+      filename = @tmp.path
+      @tmp.close(true)
       Pathname.new(filename)
     }
     let(:logger) { Fluent::Logger::ConsoleLogger.new(path.to_s) }
