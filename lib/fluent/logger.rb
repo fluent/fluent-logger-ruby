@@ -24,26 +24,6 @@ module Logger
   autoload :TestLogger    , 'fluent/logger/test_logger'
   autoload :TextLogger    , 'fluent/logger/text_logger'
 
-  class DefaultLogger < LoggerBase
-    INSTANCE = self.new
-
-    def self.instance
-      INSTANCE
-    end
-
-    def self.new
-      INSTANCE
-    end
-
-    def post(tag, map)
-      Fluent::Logger.default.post(tag, map)
-    end
-
-    def close
-      Fluent::Logger.default.close
-    end
-  end
-
   @@default_logger = nil
 
   def self.new(*args)
@@ -68,7 +48,7 @@ module Logger
   end
 
   def self.post(tag, map)
-    DefaultLogger.instance.post(tag, map)
+    @@default_logger.post(tag, map)
   end
 
   def self.default

@@ -36,7 +36,7 @@ describe Fluent::Logger::FluentLogger do
     @logger_io
   }
 
-  let (:output) {
+  let(:output) {
     sleep 0.0001 # next tick
     Fluent::Engine.match?('logger-test').output # XXX Fluent::Engine match interface
   }
@@ -51,9 +51,10 @@ describe Fluent::Logger::FluentLogger do
     queue
   }
 
-  after(:each) do
-    output.emits.clear
-  end
+    after(:each) do
+      output.emits.clear rescue nil
+    end
+
 
   context "running fluentd" do
     before(:each) do
@@ -88,7 +89,7 @@ EOF
 
     context('fluent logger interface') do
       it ('post') { 
-        logger.post('tag', {'a' => 'b'})
+        logger.post('tag', {'a' => 'b'}).should be_true
         queue.last.should == ['logger-test.tag', {'a' => 'b'}]
       }
 
@@ -137,7 +138,7 @@ EOF
   context "not running fluentd" do
     context('fluent logger interface') do
       it ('post & close') { 
-        logger.post('tag', {'a' => 'b'})
+        logger.post('tag', {'a' => 'b'}).should be_false
         queue.last.should be_nil
         logger.close
         logger_io.rewind

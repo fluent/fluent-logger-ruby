@@ -35,6 +35,7 @@ class TestLogger < LoggerBase
       define_method(:tag) { tag }
     end
     @queue << map
+    true
   end
 
   def close

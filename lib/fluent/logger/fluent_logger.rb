@@ -139,13 +139,14 @@ class FluentLogger < LoggerBase
           suppress_sec = RECONNECT_WAIT_MAX
         end
         if Time.now.to_i - @connect_error_history.last < suppress_sec
-          return
+          return false
         end
       end
 
       begin
         send_data(@pending)
         @pending = nil
+        true
       rescue
         if @pending.bytesize > @limit
           @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
@@ -153,6 +154,7 @@ class FluentLogger < LoggerBase
         end
         @con.close if connect?
         @con = nil
+        false
       end
     }
   end

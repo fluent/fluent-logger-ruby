@@ -31,6 +31,7 @@ class TextLogger < LoggerBase
       a << v.to_json
     }
     post_text a.join
+    true
   end
 end
 
