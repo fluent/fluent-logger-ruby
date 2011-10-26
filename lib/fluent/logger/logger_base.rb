@@ -18,38 +18,17 @@
 module Fluent
 module Logger
 
-
-class TestLogger < LoggerBase
-  def initialize(queue=[])
-    @queue = queue
-    @max = 1024
-    @close_called = 0
+class LoggerBase
+  def self.open(*args, &block)
+    Fluent::Logger.open(self, *args, &block)
   end
 
-  attr_accessor :max
-  attr_reader :queue
-  attr_reader :close_called
+  #def post(tag, map)
+  #end
 
-  def post(tag, map)
-    while @queue.size > @max
-      @queue.shift
-    end
-    (class<<map;self;end).module_eval do
-      define_method(:tag) { tag }
-    end
-    @queue << map
-  end
-
-  def close
-    @close_called += 1
-  end
-
-  def closed?
-    @close_called > 0
-  end
+  #def close(map)
+  #end
 end
-
 
 end
 end
-

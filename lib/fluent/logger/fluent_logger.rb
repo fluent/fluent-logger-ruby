@@ -15,6 +15,12 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
+require 'msgpack'
+require 'socket'
+require 'monitor'
+require 'logger'
+require 'yajl'
+
 module Fluent
 module Logger
 
@@ -49,23 +55,33 @@ class FluentLogger < LoggerBase
         r / RECONNECT_WAIT_INCR_RATE
       }
 
-  def initialize(tag_prefix, host, port=24224)
+  def initialize(tag_prefix, *args)
     super()
-    require 'msgpack'
-    require 'socket'
-    require 'monitor'
-    require 'logger'
+
+    options = {
+      :host => 'localhost',
+      :port => 24224
+    }
+
+    case args.first
+    when String, Symbol
+      # backward compatible
+      options[:host] = args[0]
+      options[:port] = args[1] if args[1]
+    when Hash
+      options.update args.first
+    end
 
     @tag_prefix = tag_prefix
-    @host = host
-    @port = port
+    @host = options[:host]
+    @port = options[:port]
 
     @mon = Monitor.new
     @pending = nil
     @connect_error_history = []
 
-    @limit = BUFFER_LIMIT
-    @logger = ::Logger.new(STDERR)
+    @limit = options[:buffer_limit] || BUFFER_LIMIT
+    @logger = options[:logger] || ::Logger.new(STDERR)
 
     begin
       connect!
@@ -92,11 +108,15 @@ class FluentLogger < LoggerBase
           @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
         end
       end
-      @con.close if @con
+      @con.close if connect?
       @con = nil
       @pending = nil
     }
     self
+  end
+
+  def connect?
+    !!@con
   end
 
   def finalize
@@ -104,8 +124,22 @@ class FluentLogger < LoggerBase
   end
 
   private
+  def to_msgpack(msg)
+    begin
+      msg.to_msgpack
+    rescue NoMethodError
+      Yajl::Parser.parse( Yajl::Encoder.encode(msg) ).to_msgpack
+    end
+  end
+
   def write(msg)
-    data = msg.to_msgpack
+    begin
+      data = to_msgpack(msg)
+    rescue
+      @logger.error("FluentLogger: Can't convert to msgpack: #{msg.inspect}: #{$!}")
+      return false
+    end
+
     @mon.synchronize {
       if @pending
         @pending << data
@@ -121,26 +155,28 @@ class FluentLogger < LoggerBase
           suppress_sec = RECONNECT_WAIT_MAX
         end
         if Time.now.to_i - @connect_error_history.last < suppress_sec
-          return
+          return false
         end
       end
 
       begin
         send_data(@pending)
         @pending = nil
+        true
       rescue
         if @pending.bytesize > @limit
           @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
           @pending = nil
         end
-        @con.close if @con
+        @con.close if connect?
         @con = nil
+        false
       end
     }
   end
 
   def send_data(data)
-    unless @con
+    unless connect?
       connect!
     end
     while true
