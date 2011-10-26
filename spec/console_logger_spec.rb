@@ -8,6 +8,9 @@ describe Fluent::Logger::ConsoleLogger do
   before(:each) {
     Timecop.freeze Time.local(2008, 9, 1, 10, 5, 0)
   }
+  after(:each) {
+    Timecop.return
+  }
 
   context "IO output" do
     let(:io) { StringIO.new }

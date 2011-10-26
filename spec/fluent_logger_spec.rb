@@ -1,5 +1,13 @@
 
 require 'spec_helper'
+if RUBY_VERSION < "1.9.2"
+
+describe Fluent::Logger::FluentLogger do
+  pending "fluentd don't work RUBY < 1.9.2"
+end
+
+else
+
 require 'fluent/load'
 require 'tempfile'
 require 'logger'
@@ -38,7 +46,7 @@ describe Fluent::Logger::FluentLogger do
 
   let(:output) {
     sleep 0.0001 # next tick
-    Fluent::Engine.match?('logger-test').output # XXX Fluent::Engine match interface
+    Fluent::Engine.match('logger-test').output
   }
 
   let(:queue) {
@@ -83,17 +91,17 @@ EOF
     end
 
     after(:each) do
-      Fluent::Engine.send :shutdown
       @coolio_default_loop.stop
+      Fluent::Engine.send :shutdown
     end
 
-    context('fluent logger interface') do
-      it ('post') { 
+    context('post') do
+      it ('success') { 
         logger.post('tag', {'a' => 'b'}).should be_true
         queue.last.should == ['logger-test.tag', {'a' => 'b'}]
       }
 
-      it ('close and post') {
+      it ('close after post') {
         logger.should be_connect
         logger.close
         logger.should_not be_connect
@@ -103,11 +111,37 @@ EOF
         queue.last.should == ['logger-test.tag', {'b' => 'c'}]
       }
 
-      it ('post large data') {
+      it ('large data') {
         data = {'a' => ('b' * 1000000)}
         logger.post('tag', data)
         sleep 0.01 # wait write
         queue.last.should == ['logger-test.tag', data]
+      }
+
+      it ('msgpack unsupport data') {
+        data = {
+          'time'   => Time.utc(2008, 9, 1, 10, 5, 0),
+          'object' => Object.new,
+          'proc'   => proc { 1 },
+        }
+        logger.post('tag', data)
+        logger_data = queue.last.last
+        logger_data['time'].should == '2008-09-01 10:05:00 UTC'
+        logger_data['proc'].should be
+        logger_data['object'].should be
+      }
+
+      it ('msgpack and JSON unsupport data') {
+        data = {
+          'time'   => Time.utc(2008, 9, 1, 10, 5, 0),
+          'object' => Object.new,
+          'proc'   => proc { 1 },
+          'NaN'    => (0.0/0.0) # JSON don't convert
+        }
+        logger.post('tag', data)
+        queue.last.should be_nil
+        logger_io.rewind
+        logger_io.read =~ /FluentLogger: Can't convert to msgpack:/
       }
     end
 
@@ -164,3 +198,4 @@ EOF
 
 end
 
+end

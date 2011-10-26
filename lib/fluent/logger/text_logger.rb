@@ -20,7 +20,7 @@ module Logger
 
 class TextLogger < LoggerBase
   def initialize
-    require 'json'
+    require 'yajl'
     @time_format = "%b %e %H:%M:%S"
   end
 
@@ -28,7 +28,7 @@ class TextLogger < LoggerBase
     a = [Time.now.strftime(@time_format), " ", tag, ":"]
     map.each_pair {|k,v|
       a << " #{k}="
-      a << v.to_json
+      a << Yajl::Encoder.encode(v)
     }
     post_text a.join
     true

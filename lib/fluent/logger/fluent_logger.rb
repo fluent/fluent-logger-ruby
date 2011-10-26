@@ -15,6 +15,12 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
+require 'msgpack'
+require 'socket'
+require 'monitor'
+require 'logger'
+require 'yajl'
+
 module Fluent
 module Logger
 
@@ -51,10 +57,6 @@ class FluentLogger < LoggerBase
 
   def initialize(tag_prefix, *args)
     super()
-    require 'msgpack'
-    require 'socket'
-    require 'monitor'
-    require 'logger'
 
     options = {
       :host => 'localhost',
@@ -122,8 +124,22 @@ class FluentLogger < LoggerBase
   end
 
   private
+  def to_msgpack(msg)
+    begin
+      msg.to_msgpack
+    rescue NoMethodError
+      Yajl::Parser.parse( Yajl::Encoder.encode(msg) ).to_msgpack
+    end
+  end
+
   def write(msg)
-    data = msg.to_msgpack
+    begin
+      data = to_msgpack(msg)
+    rescue
+      @logger.error("FluentLogger: Can't convert to msgpack: #{msg.inspect}: #{$!}")
+      return false
+    end
+
     @mon.synchronize {
       if @pending
         @pending << data
