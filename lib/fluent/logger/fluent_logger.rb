@@ -179,17 +179,26 @@ class FluentLogger < LoggerBase
     unless connect?
       connect!
     end
-    while true
-      n = @con.syswrite(data)
-      if n >= data.bytesize
-        break
-      end
-      data = data[n..-1]
-    end
+    @con.write data
+    #while true
+    #  puts "sending #{data.length} bytes"
+    #  if data.length > 32*1024
+    #    n = @con.syswrite(data[0..32*1024])
+    #  else
+    #    n = @con.syswrite(data)
+    #  end
+    #  puts "sent #{n}"
+    #  if n >= data.bytesize
+    #    break
+    #  end
+    #  data = data[n..-1]
+    #end
+    true
   end
 
   def connect!
     @con = TCPSocket.new(@host, @port)
+    @con.sync = true
     @connect_error_history.clear
   rescue
     @connect_error_history << Time.now.to_i
