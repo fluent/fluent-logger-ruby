@@ -18,39 +18,29 @@
 module Fluent
 module Logger
 
+class TestLogger < LoggerBase
+  def initialize(queue=[])
+    @queue = queue
+    @max = 1024
+  end
 
-class ConsoleLogger < TextLogger
-  def initialize(out)
-    super()
-    require 'time'
+  attr_accessor :max
+  attr_reader :queue
 
-    if out.is_a?(String)
-      @io = File.open(out, "a")
-      @on_reopen = Proc.new { @io.reopen(out, "a") }
-    elsif out.respond_to?(:write)
-      @io = out
-      @on_reopen = Proc.new { }
-    else
-      raise "Invlaid output: #{out.inspect}"
+  def post(tag, map)
+    while @queue.size > @max-1
+      @queue.shift
     end
-  end
-
-  attr_accessor :time_format
-
-  def reopen!
-    @on_reopen.call
-  end
-
-  def post_text(text)
-    @io.puts text
+    (class<<map;self;end).module_eval do
+      define_method(:tag) { tag }
+    end
+    @queue << map
+    true
   end
 
   def close
-    @io.close
-    self
   end
 end
-
 
 end
 end
