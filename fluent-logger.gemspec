@@ -16,7 +16,7 @@ end
 EOF
   }
 
-  unless Dir.exist?("vendor/fluentd")
+  unless File.exist?("vendor/fluentd/Gemfile")
     puts "git submodule update -i"
     system("git submodule update -i")
   end
