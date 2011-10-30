@@ -10,7 +10,7 @@ A structured event loger
     
     log = Fluent::Logger::FluentLogger.new(nil, 'localhost', 24224)
     
-    log.post("myapp.access", {"agent=>"foo"})
+    log.post("myapp.access", {"agent"=>"foo"})
     # output: myapp.access {"agent":"foo"}
 
 === Singleton
@@ -28,7 +28,7 @@ A structured event loger
     
     log = Fluent::Logger::FluentLogger.new('myapp', 'localhost', 24224)
     
-    log.post("access", {"agent=>"foo"})
+    log.post("access", {"agent"=>"foo"})
     # output: myapp.access {"agent":"foo"}
 
 == Loggers
