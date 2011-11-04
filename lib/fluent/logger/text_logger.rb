@@ -24,7 +24,8 @@ class TextLogger < LoggerBase
     @time_format = "%b %e %H:%M:%S"
   end
 
-  def post(tag, map, time=Time.now)
+  def post(tag, map, time=nil)
+    time ||= Time.now
     a = [time.strftime(@time_format), " ", tag, ":"]
     map.each_pair {|k,v|
       a << " #{k}="

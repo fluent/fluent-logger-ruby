@@ -47,7 +47,7 @@ module Logger
     end
   end
 
-  def self.post(tag, map, time=Time.now)
+  def self.post(tag, map, time=nil)
     @@default_logger.post(tag, map, time)
   end
 

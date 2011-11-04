@@ -27,7 +27,7 @@ class TestLogger < LoggerBase
   attr_accessor :max
   attr_reader :queue
 
-  def post(tag, map, time=Time.now)
+  def post(tag, map, time=nil)
     while @queue.size > @max-1
       @queue.shift
     end
