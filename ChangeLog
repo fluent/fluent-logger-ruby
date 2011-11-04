@@ -1,4 +1,18 @@
 
+Release 0.4.0 - 2011/11/05
+
+  * Wait before reconnecting to fluentd to prevent burst
+  * Flush logs when process stops using finalizer
+  * Added rspec and coverage
+  * Supports objects that don't support to_msgpack by
+    JSON.load(JSON.dump(obj)).to_msgpack
+  * FluentLogger uses IO#sync=true + IO#write instead of IO#syswrite to
+    avoid unexpected blocking
+  * Logger#post(tag, map) -> Logger#post(tag, map, time=Time.now)
+  * Removed Event classes
+  * Added NullLogger
+
+
 Release 0.3.1 - 2011/08/28
 
   * FluentLogger#initialize doesn't raise error when connection is failed.

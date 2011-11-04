@@ -8,42 +8,42 @@ A structured event loger
 
     require 'fluent-logger'
     
-    log = Fluent::Logger::FluentLogger.new(nil, 'localhost', 24224)
-    
+    log = Fluent::Logger::FluentLogger.new(nil, :host=>'localhost', :port=>24224)
     log.post("myapp.access", {"agent"=>"foo"})
+    
     # output: myapp.access {"agent":"foo"}
 
 === Singleton
 
     require 'fluent-logger'
     
-    Fluent::Logger::FluentLogger.open(nil, 'localhost', 24224)
-    
+    Fluent::Logger::FluentLogger.open(nil, :host=>'localhost', :port=>24224)
     Fluent::Logger.post("myapp.access", {"agent"=>"foo"})
+    
     # output: myapp.access {"agent":"foo"}
 
 === Tag prefix
 
     require 'fluent-logger'
     
-    log = Fluent::Logger::FluentLogger.new('myapp', 'localhost', 24224)
-    
+    log = Fluent::Logger::FluentLogger.new('myapp', :host=>'localhost', :port=>24224)
     log.post("access", {"agent"=>"foo"})
+    
     # output: myapp.access {"agent":"foo"}
 
 == Loggers
 
 === Fluent
 
-    Fluent::Logger::FluentLogger.open('tag_prefix', 'host', port=24224)
+    Fluent::Logger::FluentLogger.open('tag_prefix', :host=>'localhost', :port=24224)
 
 === Console
 
     Fluent::Logger::ConsoleLogger.open(io)
 
-=== Syslog
+=== Null
 
-    Fluent::Logger::SyslogLogger.open(ident=$0, level=:info)
+    Fluent::Logger::NullLogger.open
 
 
 Web site::  http://fluent.github.com/
