@@ -23,6 +23,7 @@ module Logger
   autoload :LoggerBase    , 'fluent/logger/logger_base'
   autoload :TestLogger    , 'fluent/logger/test_logger'
   autoload :TextLogger    , 'fluent/logger/text_logger'
+  autoload :NullLogger    , 'fluent/logger/null_logger'
 
   @@default_logger = nil
 
