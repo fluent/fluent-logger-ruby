@@ -27,12 +27,13 @@ class TestLogger < LoggerBase
   attr_accessor :max
   attr_reader :queue
 
-  def post(tag, map)
+  def post(tag, map, time=Time.now)
     while @queue.size > @max-1
       @queue.shift
     end
     (class<<map;self;end).module_eval do
       define_method(:tag) { tag }
+      define_method(:time) { time }
     end
     @queue << map
     true

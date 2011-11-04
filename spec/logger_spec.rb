@@ -12,8 +12,9 @@ describe Fluent::Logger do
     end
 
     it('post') {
-      test_logger.should_receive(:post).with('tag1', {:foo => :bar})
-      Fluent::Logger.post('tag1', {:foo => :bar})
+      time = Time.now
+      test_logger.should_receive(:post).with('tag1', {:foo => :bar}, time)
+      Fluent::Logger.post('tag1', {:foo => :bar}, time)
     }
 
     it('close') {

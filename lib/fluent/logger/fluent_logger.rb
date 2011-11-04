@@ -93,10 +93,9 @@ class FluentLogger < LoggerBase
 
   attr_accessor :limit, :logger
 
-  def post(tag, map)
-    time = Time.now.to_i
+  def post(tag, map, time=Time.now)
     tag = "#{@tag_prefix}.#{tag}" if @tag_prefix
-    write [tag, time, map]
+    write [tag, time.to_i, map]
   end
 
   def close

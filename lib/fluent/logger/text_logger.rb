@@ -24,8 +24,8 @@ class TextLogger < LoggerBase
     @time_format = "%b %e %H:%M:%S"
   end
 
-  def post(tag, map)
-    a = [Time.now.strftime(@time_format), " ", tag, ":"]
+  def post(tag, map, time=Time.now)
+    a = [time.strftime(@time_format), " ", tag, ":"]
     map.each_pair {|k,v|
       a << " #{k}="
       a << Yajl::Encoder.encode(v)
