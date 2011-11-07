@@ -19,7 +19,7 @@ module Fluent
 module Logger
 
 class NullLogger < LoggerBase
-  def post(tag, map, time=nil)
+  def post_with_time(tag, map, time)
     false
   end
 end

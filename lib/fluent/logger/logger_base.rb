@@ -23,7 +23,11 @@ class LoggerBase
     Fluent::Logger.open(self, *args, &block)
   end
 
-  #def post(tag, map, time=nil)
+  def post(tag, map)
+    post_with_time(tag, map, Time.now)
+  end
+
+  #def post_with_time(tag, map)
   #end
 
   #def close(map)
