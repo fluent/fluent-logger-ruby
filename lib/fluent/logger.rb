@@ -48,8 +48,12 @@ module Logger
     end
   end
 
-  def self.post(tag, map, time=nil)
-    @@default_logger.post(tag, map, time)
+  def self.post(tag, map)
+    @@default_logger.post(tag, map)
+  end
+
+  def self.post_with_time(tag, map, time)
+    @@default_logger.post_with_time(tag, map, time)
   end
 
   def self.default
