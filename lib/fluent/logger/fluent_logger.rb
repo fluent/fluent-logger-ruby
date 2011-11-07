@@ -81,7 +81,13 @@ class FluentLogger < LoggerBase
     @connect_error_history = []
 
     @limit = options[:buffer_limit] || BUFFER_LIMIT
+
     @logger = options[:logger] || ::Logger.new(STDERR)
+    if options[:debug]
+      @logger.level = ::Logger::DEBUG
+    else
+      @logger.level = ::Logger::INFO
+    end
 
     begin
       connect!
@@ -94,6 +100,7 @@ class FluentLogger < LoggerBase
   attr_accessor :limit, :logger
 
   def post(tag, map, time=nil)
+    @logger.debug { "event: #{tag} #{map.to_json}" rescue nil }
     time ||= Time.now
     tag = "#{@tag_prefix}.#{tag}" if @tag_prefix
     write [tag, time.to_i, map]
