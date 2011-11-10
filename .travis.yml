@@ -4,7 +4,7 @@ rvm:
  - ree
  - jruby
 
-before_script:
+before_install:
   - git submodule update -i
 
 script: bundle exec rake spec
