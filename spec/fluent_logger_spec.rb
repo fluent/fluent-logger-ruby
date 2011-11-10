@@ -59,10 +59,13 @@ describe Fluent::Logger::FluentLogger do
     queue
   }
 
-    after(:each) do
-      output.emits.clear rescue nil
-    end
+  after(:each) do
+    output.emits.clear rescue nil
+  end
 
+  def wait_transfer
+    sleep 0.1
+  end
 
   context "running fluentd" do
     before(:each) do
@@ -83,21 +86,23 @@ EOF
       Fluent::Test.setup
       Fluent::Engine.read_config(tmp.path)
       @coolio_default_loop = nil
-      Thread.new {
+      @thread = Thread.new {
         @coolio_default_loop = Coolio::Loop.default
         Fluent::Engine.run
       }
-      sleep 0.001 # next tick
+      sleep 0.1 # next tick
     end
 
     after(:each) do
       @coolio_default_loop.stop
       Fluent::Engine.send :shutdown
+      @thread.join
     end
 
     context('post') do
       it ('success') { 
         logger.post('tag', {'a' => 'b'}).should be_true
+        wait_transfer
         queue.last.should == ['logger-test.tag', {'a' => 'b'}]
       }
 
@@ -108,13 +113,14 @@ EOF
 
         logger.post('tag', {'b' => 'c'})
         logger.should be_connect
+        wait_transfer
         queue.last.should == ['logger-test.tag', {'b' => 'c'}]
       }
 
       it ('large data') {
         data = {'a' => ('b' * 1000000)}
         logger.post('tag', data)
-        sleep 0.01 # wait write
+        wait_transfer
         queue.last.should == ['logger-test.tag', data]
       }
 
@@ -125,6 +131,7 @@ EOF
           'proc'   => proc { 1 },
         }
         logger.post('tag', data)
+        wait_transfer
         logger_data = queue.last.last
         logger_data['time'].should == '2008-09-01 10:05:00 UTC'
         logger_data['proc'].should be
@@ -139,6 +146,7 @@ EOF
           'NaN'    => (0.0/0.0) # JSON don't convert
         }
         logger.post('tag', data)
+        wait_transfer
         queue.last.should be_nil
         logger_io.rewind
         logger_io.read =~ /FluentLogger: Can't convert to msgpack:/
@@ -171,8 +179,9 @@ EOF
   
   context "not running fluentd" do
     context('fluent logger interface') do
-      it ('post & close') { 
+      it ('post & close') {
         logger.post('tag', {'a' => 'b'}).should be_false
+        wait_transfer  # even if wait
         queue.last.should be_nil
         logger.close
         logger_io.rewind
@@ -184,6 +193,7 @@ EOF
       it ('post limit over') do
         logger.limit = 100
         logger.post('tag', {'a' => 'b'})
+        wait_transfer  # even if wait
         queue.last.should be_nil
 
         logger_io.rewind
