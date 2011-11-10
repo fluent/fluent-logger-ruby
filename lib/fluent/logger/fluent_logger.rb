@@ -82,11 +82,15 @@ class FluentLogger < LoggerBase
 
     @limit = options[:buffer_limit] || BUFFER_LIMIT
 
-    @logger = options[:logger] || ::Logger.new(STDERR)
-    if options[:debug]
-      @logger.level = ::Logger::DEBUG
+    if logger = options[:logger]
+      @logger = logger
     else
-      @logger.level = ::Logger::INFO
+      @logger = ::Logger.new(STDERR)
+      if options[:debug]
+        @logger.level = ::Logger::DEBUG
+      else
+        @logger.level = ::Logger::INFO
+      end
     end
 
     begin
