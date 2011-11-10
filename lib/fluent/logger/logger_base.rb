@@ -30,8 +30,8 @@ class LoggerBase
   #def post_with_time(tag, map)
   #end
 
-  #def close(map)
-  #end
+  def close
+  end
 end
 
 end
