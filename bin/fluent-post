@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require 'fluent/logger/fluent_logger/cui'
+
+res = Fluent::Logger::FluentLogger::CUI.post(ARGV)
+if res[:success]
+  warn "post successed. #=> #{res[:data].inspect}"
+else
+  warn "post failed. #=> #{res[:data].inspect}"
+  exit 1
+end

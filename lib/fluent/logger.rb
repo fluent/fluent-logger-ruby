@@ -24,6 +24,7 @@ module Logger
   autoload :TestLogger    , 'fluent/logger/test_logger'
   autoload :TextLogger    , 'fluent/logger/text_logger'
   autoload :NullLogger    , 'fluent/logger/null_logger'
+  autoload :VERSION       , 'fluent/logger/version'
 
   @@default_logger = nil
 

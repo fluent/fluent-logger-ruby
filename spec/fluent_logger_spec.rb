@@ -13,10 +13,13 @@ require 'tempfile'
 require 'logger'
 require 'socket'
 require 'stringio'
+require 'fluent/logger/fluent_logger/cui'
 
 $log = Fluent::Log.new(StringIO.new) # XXX should remove $log from fluentd 
 
 describe Fluent::Logger::FluentLogger do
+  WAIT = ENV['WAIT'] ? ENV['WAIT'].to_f : 0.1
+
   let(:fluentd_port) {
     port = 60001
     loop do
@@ -64,7 +67,7 @@ describe Fluent::Logger::FluentLogger do
   end
 
   def wait_transfer
-    sleep 0.1
+    sleep WAIT
   end
 
   context "running fluentd" do
@@ -90,13 +93,21 @@ EOF
         @coolio_default_loop = Coolio::Loop.default
         Fluent::Engine.run
       }
-      sleep 0.1 # next tick
+      wait_transfer
     end
 
     after(:each) do
       @coolio_default_loop.stop
       Fluent::Engine.send :shutdown
       @thread.join
+    end
+
+    context('Post by CUI') do
+      it('post') {
+        args = %W(-h localhost -p #{fluentd_port} -t logger-test.tag -v a=b -v foo=bar)
+        Fluent::Logger::FluentLogger::CUI.post(args)
+        queue.last.should == ['logger-test.tag', {'a' => 'b', 'foo' => 'bar'}]
+      }
     end
 
     context('post') do
