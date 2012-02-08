@@ -32,7 +32,7 @@ class ConsoleLogger < TextLogger
       @io = out
       @on_reopen = Proc.new { }
     else
-      raise "Invlaid output: #{out.inspect}"
+      raise "Invalid output: #{out.inspect}"
     end
   end
 
