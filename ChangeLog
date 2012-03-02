@@ -1,4 +1,11 @@
 
+Release 0.4.2 - 2012/03/02
+
+  * Added TestLogger#tag_queue(tag_name)
+  * Added bin/fluent-post cli command
+  * Impl default LoggerBase#close
+  * Don't change logger.level if :debug=> option is sepcified
+
 Release 0.4.1 - 2011/11/07
 
   * added Logger#post_with_time(tag, map, time)
