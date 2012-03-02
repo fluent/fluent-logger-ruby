@@ -39,6 +39,10 @@ class TestLogger < LoggerBase
     true
   end
 
+  def tag_queue(tag)
+    @queue.find_all {|map| map.tag == tag }
+  end
+
   def close
   end
 end

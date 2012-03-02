@@ -16,6 +16,12 @@ describe Fluent::Logger::TestLogger do
       its(:last)  { should == {:foo => :baz } }
       its("first.tag") { should == "tag1" }
       its("last.tag")  { should == "tag2" }
+
+      it("tag_queue") {
+        logger.tag_queue('tag1').size.should == 1
+        logger.tag_queue('tag2').size.should == 1
+        logger.tag_queue('tag3').size.should == 0
+      }
     end
 
     context "max" do
