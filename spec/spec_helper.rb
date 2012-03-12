@@ -2,8 +2,16 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
 if ENV['SIMPLE_COV']
-   require 'simplecov'
-  SimpleCov.start do 
+  require 'simplecov'
+  require 'simplecov-vim/formatter'
+  class SimpleCov::Formatter::MergedFormatter
+    def format(result)
+      SimpleCov::Formatter::HTMLFormatter.new.format(result)
+      SimpleCov::Formatter::VimFormatter.new.format(result)
+    end
+  end
+  SimpleCov.start do
+    formatter SimpleCov::Formatter::MergedFormatter
     add_filter 'spec/'
     add_filter 'test/'
     add_filter 'pkg/'
