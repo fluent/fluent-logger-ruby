@@ -54,10 +54,8 @@ describe Fluent::Logger::FluentLogger do
 
   let(:queue) {
     queue = []
-    output.emits.each {|tag,events|
-      events.each {|time,record|
-        queue << [tag, record]
-      }
+    output.emits.each {|tag, time, record|
+      queue << [tag, record]
     }
     queue
   }
