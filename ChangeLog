@@ -1,4 +1,8 @@
 
+Release 0.4.3 - 2012/04/24
+
+  * Update yajl dependency version >= 1.0 (thanks shun0102)
+
 Release 0.4.2 - 2012/03/02
 
   * Added TestLogger#tag_queue(tag_name)
