@@ -104,6 +104,7 @@ EOF
       it('post') {
         args = %W(-h localhost -p #{fluentd_port} -t logger-test.tag -v a=b -v foo=bar)
         Fluent::Logger::FluentLogger::CUI.post(args)
+        wait_transfer
         queue.last.should == ['logger-test.tag', {'a' => 'b', 'foo' => 'bar'}]
       }
     end
