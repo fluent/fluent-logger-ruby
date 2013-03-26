@@ -81,6 +81,7 @@ class FluentLogger < LoggerBase
     @connect_error_history = []
 
     @limit = options[:buffer_limit] || BUFFER_LIMIT
+    @log_reconnect_error_threshold = options[:log_reconnect_error_threshold] ||  RECONNECT_WAIT_MAX_COUNT
 
     if logger = options[:logger]
       @logger = logger
@@ -101,7 +102,7 @@ class FluentLogger < LoggerBase
     end
   end
 
-  attr_accessor :limit, :logger
+  attr_accessor :limit, :logger, :log_reconnect_error_threshold
 
   def post_with_time(tag, map, time)
     @logger.debug { "event: #{tag} #{map.to_json}" rescue nil }
@@ -142,6 +143,14 @@ class FluentLogger < LoggerBase
     end
   end
 
+  def suppress_sec
+    if (sz = @connect_error_history.size) < RECONNECT_WAIT_MAX_COUNT
+      RECONNECT_WAIT * (RECONNECT_WAIT_INCR_RATE ** (sz - 1))
+    else
+      RECONNECT_WAIT_MAX
+    end
+  end
+
   def write(msg)
     begin
       data = to_msgpack(msg)
@@ -159,11 +168,6 @@ class FluentLogger < LoggerBase
 
       # suppress reconnection burst
       if !@connect_error_history.empty? && @pending.bytesize <= @limit
-        if (sz = @connect_error_history.size) < RECONNECT_WAIT_MAX_COUNT
-          suppress_sec = RECONNECT_WAIT * (RECONNECT_WAIT_INCR_RATE ** (sz - 1))
-        else
-          suppress_sec = RECONNECT_WAIT_MAX
-        end
         if Time.now.to_i - @connect_error_history.last < suppress_sec
           return false
         end
@@ -210,12 +214,23 @@ class FluentLogger < LoggerBase
     @con = TCPSocket.new(@host, @port)
     @con.sync = true
     @connect_error_history.clear
+    @logged_reconnect_error = false
   rescue
     @connect_error_history << Time.now.to_i
     if @connect_error_history.size > RECONNECT_WAIT_MAX_COUNT
       @connect_error_history.shift
     end
+
+    if @connect_error_history.size >= @log_reconnect_error_threshold && !@logged_reconnect_error
+      log_reconnect_error
+      @logged_reconnect_error = true
+    end
+
     raise
+  end
+
+  def log_reconnect_error
+    @logger.error("FluentLogger: Can't connect to #{@host}:#{@port}(#{@connect_error_history.size} retried): #{$!}")
   end
 end
 
