@@ -162,7 +162,7 @@ EOF
         logger_io.read =~ /FluentLogger: Can't convert to msgpack:/
       }
 
-      it ('non hash data should raise error') {
+      it ('should raise an error when second argument is non hash object') {
         data = 'FooBar'
         expect {
           logger.post('tag', data)
