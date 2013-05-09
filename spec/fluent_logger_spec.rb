@@ -161,6 +161,18 @@ EOF
         logger_io.rewind
         logger_io.read =~ /FluentLogger: Can't convert to msgpack:/
       }
+
+      it ('should raise an error when second argument is non hash object') {
+        data = 'FooBar'
+        expect {
+          logger.post('tag', data)
+        }.to raise_error(ArgumentError)
+
+        data = nil
+        expect {
+          logger.post('tag', data)
+        }.to raise_error(ArgumentError)
+      }
     end
 
     context "initializer" do
