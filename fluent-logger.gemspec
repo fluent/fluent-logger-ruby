@@ -36,7 +36,7 @@ EOF
   gem.require_paths = ['lib']
 
   gem.add_dependency 'yajl-ruby', '~> 1.0'
-  gem.add_dependency 'msgpack', '0.4.7'
+  gem.add_dependency 'msgpack', '>= 0.4.7'
   gem.add_development_dependency 'rake', '>= 0.9.2'
   gem.add_development_dependency 'rspec', '>= 2.7.0'
   gem.add_development_dependency 'simplecov', '>= 0.5.4'
