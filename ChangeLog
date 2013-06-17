@@ -1,3 +1,8 @@
+Release 0.4.6 - 2013/06/17
+
+  * Raise an ArgumentError when passes invalid argument to post method
+  * Relax msgpack gem version
+
 Release 0.4.5 - 2013/02/26
 
   * Use https scheme for rubygems source
