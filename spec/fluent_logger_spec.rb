@@ -225,6 +225,19 @@ EOF
         logger_io.rewind
         logger_io.read.should =~ /Can't send logs to/
       end
+
+      it ('log connect error once') do
+        logger.stub(:suppress_sec).and_return(-1)
+        logger.log_reconnect_error_threshold = 1
+        logger.should_receive(:log_reconnect_error).once.and_call_original
+
+        logger.post('tag', {'a' => 'b'})
+        wait_transfer  # even if wait
+        logger.post('tag', {'a' => 'b'})
+        wait_transfer  # even if wait
+        logger_io.rewind
+        logger_io.read.should =~ /Can't connect to/
+      end
     end
   end
 
