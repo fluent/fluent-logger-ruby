@@ -20,7 +20,7 @@ module Logger
 
 class LoggerBase
   def self.open(*args, &block)
-    Fluent::Logger.open(self, *args, &block)
+    Fluent::Logger.open(*args, &block)
   end
 
   def post(tag, map)
