@@ -94,12 +94,12 @@ class FluentLogger < LoggerBase
       end
     end
 
-    @last_error = nil
+    @last_error = {}
 
     begin
       connect!
     rescue => e
-      @last_error = e
+      set_last_error(e)
       @logger.error "Failed to connect fluentd: #{$!}"
       @logger.error "Connection will be retried."
     end
@@ -107,6 +107,10 @@ class FluentLogger < LoggerBase
 
   attr_accessor :limit, :logger, :log_reconnect_error_threshold
   attr_reader :last_error
+
+  def last_error
+    @last_error[Thread.current.object_id]
+  end
 
   def post_with_time(tag, map, time)
     @logger.debug { "event: #{tag} #{map.to_json}" rescue nil }
@@ -120,7 +124,7 @@ class FluentLogger < LoggerBase
         begin
           send_data(@pending)
         rescue => e
-          @last_error = e
+          set_last_error(e)
           @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
         end
       end
@@ -160,7 +164,7 @@ class FluentLogger < LoggerBase
     begin
       data = to_msgpack(msg)
     rescue => e
-      @last_error = e
+      set_last_error(e)
       @logger.error("FluentLogger: Can't convert to msgpack: #{msg.inspect}: #{$!}")
       return false
     end
@@ -184,7 +188,7 @@ class FluentLogger < LoggerBase
         @pending = nil
         true
       rescue => e
-        @last_error = e
+        set_last_error(e)
         if @pending.bytesize > @limit
           @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
           @pending = nil
@@ -238,6 +242,11 @@ class FluentLogger < LoggerBase
 
   def log_reconnect_error
     @logger.error("FluentLogger: Can't connect to #{@host}:#{@port}(#{@connect_error_history.size} retried): #{$!}")
+  end
+
+  def set_last_error(e)
+    # TODO: Check non GVL env
+    @last_error[Thread.current.object_id] = e
   end
 end
 
