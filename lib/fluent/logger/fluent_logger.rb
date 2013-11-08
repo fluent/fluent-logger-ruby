@@ -94,15 +94,19 @@ class FluentLogger < LoggerBase
       end
     end
 
+    @last_error = nil
+
     begin
       connect!
-    rescue
+    rescue => e
+      @last_error = e
       @logger.error "Failed to connect fluentd: #{$!}"
       @logger.error "Connection will be retried."
     end
   end
 
   attr_accessor :limit, :logger, :log_reconnect_error_threshold
+  attr_reader :last_error
 
   def post_with_time(tag, map, time)
     @logger.debug { "event: #{tag} #{map.to_json}" rescue nil }
@@ -115,7 +119,8 @@ class FluentLogger < LoggerBase
       if @pending
         begin
           send_data(@pending)
-        rescue
+        rescue => e
+          @last_error = e
           @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
         end
       end
@@ -154,7 +159,8 @@ class FluentLogger < LoggerBase
   def write(msg)
     begin
       data = to_msgpack(msg)
-    rescue
+    rescue => e
+      @last_error = e
       @logger.error("FluentLogger: Can't convert to msgpack: #{msg.inspect}: #{$!}")
       return false
     end
@@ -177,7 +183,8 @@ class FluentLogger < LoggerBase
         send_data(@pending)
         @pending = nil
         true
-      rescue
+      rescue => e
+        @last_error = e
         if @pending.bytesize > @limit
           @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
           @pending = nil
@@ -215,7 +222,7 @@ class FluentLogger < LoggerBase
     @con.sync = true
     @connect_error_history.clear
     @logged_reconnect_error = false
-  rescue
+  rescue => e
     @connect_error_history << Time.now.to_i
     if @connect_error_history.size > RECONNECT_WAIT_MAX_COUNT
       @connect_error_history.shift
@@ -226,7 +233,7 @@ class FluentLogger < LoggerBase
       @logged_reconnect_error = true
     end
 
-    raise
+    raise e
   end
 
   def log_reconnect_error
