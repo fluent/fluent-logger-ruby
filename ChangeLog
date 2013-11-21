@@ -1,3 +1,8 @@
+Release 0.4.7 - 2013/11/21
+
+  * Suppress log error message with :log_reconnect_error_threshold option
+  * Add FluentLogger#last_error method to get last exception in user code
+
 Release 0.4.6 - 2013/06/17
 
   * Raise an ArgumentError when passes invalid argument to post method
