@@ -1,5 +1,5 @@
 # Fluent logger
-A structured event loger
+A structured event logger
 
 ## Examples
 
