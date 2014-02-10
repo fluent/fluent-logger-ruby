@@ -16,24 +16,22 @@
 #    limitations under the License.
 #
 module Fluent
-module Logger
+  module Logger
+    class LoggerBase
+      def self.open(*args, &block)
+        Fluent::Logger.open(self, *args, &block)
+      end
 
-class LoggerBase
-  def self.open(*args, &block)
-    Fluent::Logger.open(self, *args, &block)
+      def post(tag, map)
+        raise ArgumentError.new("Second argument should kind of Hash (tag: #{map})") unless map.kind_of? Hash
+        post_with_time(tag, map, Time.now)
+      end
+
+      #def post_with_time(tag, map)
+      #end
+
+      def close
+      end
+    end
   end
-
-  def post(tag, map)
-    raise ArgumentError.new("Second argument should kind of Hash (tag: #{map})") unless map.kind_of? Hash
-    post_with_time(tag, map, Time.now)
-  end
-
-  #def post_with_time(tag, map)
-  #end
-
-  def close
-  end
-end
-
-end
 end

@@ -16,13 +16,11 @@
 #    limitations under the License.
 #
 module Fluent
-module Logger
-
-class NullLogger < LoggerBase
-  def post_with_time(tag, map, time)
-    false
+  module Logger
+    class NullLogger < LoggerBase
+      def post_with_time(tag, map, time)
+        false
+      end
+    end
   end
-end
-
-end
 end

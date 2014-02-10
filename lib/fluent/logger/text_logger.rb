@@ -16,24 +16,22 @@
 #    limitations under the License.
 #
 module Fluent
-module Logger
+  module Logger
+    class TextLogger < LoggerBase
+      def initialize
+        require 'yajl'
+        @time_format = "%b %e %H:%M:%S"
+      end
 
-class TextLogger < LoggerBase
-  def initialize
-    require 'yajl'
-    @time_format = "%b %e %H:%M:%S"
+      def post_with_time(tag, map, time)
+        a = [time.strftime(@time_format), " ", tag, ":"]
+        map.each_pair {|k,v|
+          a << " #{k}="
+          a << Yajl::Encoder.encode(v)
+        }
+        post_text a.join
+        true
+      end
+    end
   end
-
-  def post_with_time(tag, map, time)
-    a = [time.strftime(@time_format), " ", tag, ":"]
-    map.each_pair {|k,v|
-      a << " #{k}="
-      a << Yajl::Encoder.encode(v)
-    }
-    post_text a.join
-    true
-  end
-end
-
-end
 end

@@ -18,40 +18,37 @@
 require 'fluent/logger/text_logger'
 
 module Fluent
-module Logger
+  module Logger
+    class ConsoleLogger < TextLogger
+      def initialize(out)
+        super()
+        require 'time'
 
-class ConsoleLogger < TextLogger
-  def initialize(out)
-    super()
-    require 'time'
+        if out.is_a?(String)
+          @io = File.open(out, "a")
+          @on_reopen = Proc.new { @io.reopen(out, "a") }
+        elsif out.respond_to?(:write)
+          @io = out
+          @on_reopen = Proc.new { }
+        else
+          raise "Invalid output: #{out.inspect}"
+        end
+      end
 
-    if out.is_a?(String)
-      @io = File.open(out, "a")
-      @on_reopen = Proc.new { @io.reopen(out, "a") }
-    elsif out.respond_to?(:write)
-      @io = out
-      @on_reopen = Proc.new { }
-    else
-      raise "Invalid output: #{out.inspect}"
+      attr_accessor :time_format
+
+      def reopen!
+        @on_reopen.call
+      end
+
+      def post_text(text)
+        @io.puts text
+      end
+
+      def close
+        @io.close
+        self
+      end
     end
   end
-
-  attr_accessor :time_format
-
-  def reopen!
-    @on_reopen.call
-  end
-
-  def post_text(text)
-    @io.puts text
-  end
-
-  def close
-    @io.close
-    self
-  end
-end
-
-
-end
 end

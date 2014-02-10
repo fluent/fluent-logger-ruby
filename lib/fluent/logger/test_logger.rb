@@ -16,36 +16,34 @@
 #    limitations under the License.
 #
 module Fluent
-module Logger
+  module Logger
+    class TestLogger < LoggerBase
+      def initialize(queue=[])
+        @queue = queue
+        @max = 1024
+      end
 
-class TestLogger < LoggerBase
-  def initialize(queue=[])
-    @queue = queue
-    @max = 1024
-  end
+      attr_accessor :max
+      attr_reader :queue
 
-  attr_accessor :max
-  attr_reader :queue
+      def post_with_time(tag, map, time)
+        while @queue.size > @max-1
+          @queue.shift
+        end
+        (class<<map;self;end).module_eval do
+          define_method(:tag) { tag }
+          define_method(:time) { time }
+        end
+        @queue << map
+        true
+      end
 
-  def post_with_time(tag, map, time)
-    while @queue.size > @max-1
-      @queue.shift
+      def tag_queue(tag)
+        @queue.find_all {|map| map.tag == tag }
+      end
+
+      def close
+      end
     end
-    (class<<map;self;end).module_eval do
-      define_method(:tag) { tag }
-      define_method(:time) { time }
-    end
-    @queue << map
-    true
   end
-
-  def tag_queue(tag)
-    @queue.find_all {|map| map.tag == tag }
-  end
-
-  def close
-  end
-end
-
-end
 end
