@@ -16,54 +16,52 @@
 #    limitations under the License.
 #
 module Fluent
+  module Logger
+    autoload :ConsoleLogger , 'fluent/logger/console_logger'
+    autoload :FluentLogger  , 'fluent/logger/fluent_logger'
+    autoload :LoggerBase    , 'fluent/logger/logger_base'
+    autoload :TestLogger    , 'fluent/logger/test_logger'
+    autoload :TextLogger    , 'fluent/logger/text_logger'
+    autoload :NullLogger    , 'fluent/logger/null_logger'
+    autoload :VERSION       , 'fluent/logger/version'
 
-module Logger
-  autoload :ConsoleLogger , 'fluent/logger/console_logger'
-  autoload :FluentLogger  , 'fluent/logger/fluent_logger'
-  autoload :LoggerBase    , 'fluent/logger/logger_base'
-  autoload :TestLogger    , 'fluent/logger/test_logger'
-  autoload :TextLogger    , 'fluent/logger/text_logger'
-  autoload :NullLogger    , 'fluent/logger/null_logger'
-  autoload :VERSION       , 'fluent/logger/version'
+    @@default_logger = nil
 
-  @@default_logger = nil
-
-  def self.new(*args)
-    if args.first.is_a?(Class) && args.first.ancestors.include?(LoggerBase)
-      type = args.shift
-    else
-      type = FluentLogger
+    def self.new(*args)
+      if args.first.is_a?(Class) && args.first.ancestors.include?(LoggerBase)
+        type = args.shift
+      else
+        type = FluentLogger
+      end
+      type.new(*args)
     end
-    type.new(*args)
-  end
 
-  def self.open(*args)
-    close
-    @@default_logger = new(*args)
-  end
+    def self.open(*args)
+      close
+      @@default_logger = new(*args)
+    end
 
-  def self.close
-    if @@default_logger
-      @@default_logger.close
-      @@default_logger = nil
+    def self.close
+      if @@default_logger
+        @@default_logger.close
+        @@default_logger = nil
+      end
+    end
+
+    def self.post(tag, map)
+      @@default_logger.post(tag, map)
+    end
+
+    def self.post_with_time(tag, map, time)
+      @@default_logger.post_with_time(tag, map, time)
+    end
+
+    def self.default
+      @@default_logger ||= ConsoleLogger.new(STDOUT)
+    end
+
+    def self.default=(logger)
+      @@default_logger = logger
     end
   end
-
-  def self.post(tag, map)
-    @@default_logger.post(tag, map)
-  end
-
-  def self.post_with_time(tag, map, time)
-    @@default_logger.post_with_time(tag, map, time)
-  end
-
-  def self.default
-    @@default_logger ||= ConsoleLogger.new(STDOUT)
-  end
-
-  def self.default=(logger)
-    @@default_logger = logger
-  end
-end
-
 end
