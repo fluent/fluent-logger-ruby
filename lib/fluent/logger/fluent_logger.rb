@@ -26,25 +26,6 @@ module Logger
 
 
 class FluentLogger < LoggerBase
-  module Finalizable
-    require 'delegate'
-    def new(*args, &block)
-      obj = allocate
-      obj.instance_eval { initialize(*args, &block) }
-      dc = DelegateClass(obj.class).new(obj)
-      ObjectSpace.define_finalizer(dc, finalizer(obj))
-      dc
-    end
-
-    def finalizer(obj)
-      fin = obj.method(:finalize)
-      proc {|id|
-        fin.call
-      }
-    end
-  end
-  extend Finalizable
-
   BUFFER_LIMIT = 8*1024*1024
   RECONNECT_WAIT = 0.5
   RECONNECT_WAIT_INCR_RATE = 1.5
@@ -103,6 +84,8 @@ class FluentLogger < LoggerBase
       @logger.error "Failed to connect fluentd: #{$!}"
       @logger.error "Connection will be retried."
     end
+
+    at_exit { close }
   end
 
   attr_accessor :limit, :logger, :log_reconnect_error_threshold
@@ -137,10 +120,6 @@ class FluentLogger < LoggerBase
 
   def connect?
     !!@con
-  end
-
-  def finalize
-    close
   end
 
   private

@@ -28,8 +28,7 @@ describe Fluent::Logger do
       Fluent::Logger.open('tag-prefix', {
         :logger => ::Logger.new(fluent_logger_logger_io)
       })
-      # Fluent::Logger::FluentLogger is delegator
-      Fluent::Logger.default.method_missing(:kind_of?, Fluent::Logger::FluentLogger).should be_true
+      Fluent::Logger.default.kind_of?(Fluent::Logger::FluentLogger).should be_true
     }
 
     it('open with BaseLogger class') {
