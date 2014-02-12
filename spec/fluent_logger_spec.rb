@@ -179,7 +179,7 @@ EOF
       it "backward compatible" do
         port = fluentd_port
         fluent_logger = Fluent::Logger::FluentLogger.new('logger-test', 'localhost', port)
-        fluent_logger.method_missing(:instance_eval) { # fluent_logger is delegetor
+        fluent_logger.instance_eval {
           @host.should == 'localhost'
           @port.should == port
         }
@@ -191,7 +191,7 @@ EOF
           :host => 'localhost',
           :port => port
         })
-        fluent_logger.method_missing(:instance_eval) { # fluent_logger is delegetor
+        fluent_logger.instance_eval {
           @host.should == 'localhost'
           @port.should == port
         }
