@@ -1,3 +1,8 @@
+Release 0.4.8 - 2014/04/12
+
+  * Use at_exit for logger finalization
+  * Fix unable to construct a default logger of non-default type
+
 Release 0.4.7 - 2013/11/21
 
   * Suppress log error message with :log_reconnect_error_threshold option
