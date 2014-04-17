@@ -96,7 +96,7 @@ class FluentLogger < LoggerBase
   end
 
   def post_with_time(tag, map, time)
-    @logger.debug { "event: #{tag} #{map.to_json}" rescue nil }
+    @logger.debug { "event: #{tag} #{map.to_json}" rescue nil } if @logger.debug?
     tag = "#{@tag_prefix}.#{tag}" if @tag_prefix
     write [tag, time.to_i, map]
   end
