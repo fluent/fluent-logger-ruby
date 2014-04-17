@@ -1,3 +1,7 @@
+Release 0.4.9 - 2014/04/17
+
+  * Fix the peformance regression caused by many to_json calls
+
 Release 0.4.8 - 2014/04/12
 
   * Use at_exit for logger finalization
