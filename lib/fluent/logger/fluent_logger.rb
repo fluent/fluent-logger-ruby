@@ -119,7 +119,7 @@ class FluentLogger < LoggerBase
   end
 
   def connect?
-    !!@con
+    @con && !@con.closed?
   end
 
   private
