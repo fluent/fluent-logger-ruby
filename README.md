@@ -20,7 +20,7 @@ end
 ```ruby
 require 'fluent-logger'
 
-Fluent::Logger::FluentLogger.open(nil, :host=>'localhost', :port=>24224)
+Fluent::Logger.open(Fluent::Logger::FluentLogger, nil, :host=>'localhost', :port=>24224)
 Fluent::Logger.post("myapp.access", {"agent"=>"foo"})
 
 # output: myapp.access {"agent":"foo"}
@@ -40,17 +40,17 @@ log.post("access", {"agent"=>"foo"})
 
 ### Fluent
 ```ruby
-Fluent::Logger::FluentLogger.open('tag_prefix', :host=>'localhost', :port=24224)
+Fluent::Logger.open(Fluent::Logger::FluentLogger, 'tag_prefix', :host=>'localhost', :port=24224)
 ```
 
 ### Console
 ```ruby
-Fluent::Logger::ConsoleLogger.open(io)
+Fluent::Logger.open(Fluent::Logger::ConsoleLogger, io)
 ```
 
 ### Null
 ```ruby
-Fluent::Logger::NullLogger.open
+Fluent::Logger.open(Fluent::Logger::NullLogger)
 ```
 
 |name|description|
