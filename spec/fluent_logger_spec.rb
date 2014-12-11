@@ -111,7 +111,7 @@ EOF
 
     context('post') do
       it ('success') { 
-        logger.post('tag', {'a' => 'b'}).should be_true
+        expect(logger.post('tag', {'a' => 'b'})).to be true
         wait_transfer
         queue.last.should == ['logger-test.tag', {'a' => 'b'}]
       }
@@ -202,7 +202,7 @@ EOF
   context "not running fluentd" do
     context('fluent logger interface') do
       it ('post & close') {
-        logger.post('tag', {'a' => 'b'}).should be_false
+        expect(logger.post('tag', {'a' => 'b'})).to be false
         wait_transfer  # even if wait
         queue.last.should be_nil
         logger.close

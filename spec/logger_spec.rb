@@ -13,6 +13,7 @@ describe Fluent::Logger do
 
     it('post') {
       test_logger.should_receive(:post).with('tag1', {:foo => :bar})
+      #allow_any_instance_of(test_logger).to receive(:post).with('tag1', {:foo => :bar})
       Fluent::Logger.post('tag1', {:foo => :bar})
     }
 
@@ -28,7 +29,7 @@ describe Fluent::Logger do
       Fluent::Logger.open('tag-prefix', {
         :logger => ::Logger.new(fluent_logger_logger_io)
       })
-      Fluent::Logger.default.kind_of?(Fluent::Logger::FluentLogger).should be_true
+      expect(Fluent::Logger.default.kind_of?(Fluent::Logger::FluentLogger)).to be true
     }
 
     it('open with BaseLogger class') {

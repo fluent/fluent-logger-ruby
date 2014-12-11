@@ -38,7 +38,8 @@ EOF
   gem.add_dependency 'yajl-ruby', '~> 1.0'
   gem.add_dependency "msgpack", [">= 0.4.4", "!= 0.5.0", "!= 0.5.1", "!= 0.5.2", "!= 0.5.3", "< 0.6.0"]
   gem.add_development_dependency 'rake', '>= 0.9.2'
-  gem.add_development_dependency 'rspec', '>= 2.7.0'
+  gem.add_development_dependency 'rspec', '>= 3.0.0'
+  gem.add_development_dependency 'rspec-its', '>= 1.1.0'
   gem.add_development_dependency 'simplecov', '>= 0.5.4'
   gem.add_development_dependency 'timecop', '>= 0.3.0'
 end
