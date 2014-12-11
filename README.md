@@ -40,7 +40,7 @@ log.post("access", {"agent"=>"foo"})
 
 ### Fluent
 ```ruby
-Fluent::Logger::FluentLogger.open('tag_prefix', :host=>'localhost', :port=24224)
+Fluent::Logger::FluentLogger.open('tag_prefix', :host=>'localhost', :port=>24224)
 ```
 
 ### Console
