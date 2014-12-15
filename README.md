@@ -55,8 +55,8 @@ Fluent::Logger::NullLogger.open
 
 |name|description|
 |---|---|
-|Web site|http://fluent.github.com/|
-|Documents|http://fluent.github.com/doc/|
+|Web site|http://fluentd.org/|
+|Documents|http://docs.fluentd.org/|
 |Source repository|https://github.com/fluent/fluent-logger-ruby|
 |Author|Sadayuki Furuhashi|
 |Copyright|(c) 2011 FURUHASHI Sadayuki|
