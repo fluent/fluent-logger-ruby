@@ -1,3 +1,8 @@
+Release 0.4.10 - 2015/01/10
+
+  * Call closed? in connect? method to check connection is closed or not
+  * Add rspec-its for spec
+
 Release 0.4.9 - 2014/04/17
 
   * Fix the peformance regression caused by many to_json calls
