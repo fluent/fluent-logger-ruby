@@ -1,19 +1,14 @@
 
 require 'spec_helper'
-if RUBY_VERSION < "1.9.2"
-
-describe Fluent::Logger::FluentLogger do
-  pending "fluentd don't work RUBY < 1.9.2"
-end
-
-else
 
 require 'fluent/load'
+require 'fluent/test'
 require 'tempfile'
 require 'logger'
 require 'socket'
 require 'stringio'
 require 'fluent/logger/fluent_logger/cui'
+require 'plugin/out_test'
 
 $log = Fluent::Log.new(StringIO.new) # XXX should remove $log from fluentd 
 
@@ -70,22 +65,17 @@ describe Fluent::Logger::FluentLogger do
 
   context "running fluentd" do
     before(:each) do
-      tmp = Tempfile.new('fluent-logger-config')
-      tmp.close(false)
-
-      File.open(tmp.path, 'w') {|f|
-        f.puts <<EOF
+      @config = Fluent::Config.parse(<<EOF, '(logger-spec)', '(logger-spec-dir)', true)
 <source>
-  type tcp
+  type forward
   port #{fluentd_port}
 </source>
 <match logger-test.**>
   type test
 </match>
 EOF
-      }
       Fluent::Test.setup
-      Fluent::Engine.read_config(tmp.path)
+      Fluent::Engine.run_configure(@config)
       @coolio_default_loop = nil
       @thread = Thread.new {
         @coolio_default_loop = Coolio::Loop.default
@@ -240,7 +230,4 @@ EOF
       end
     end
   end
-
-end
-
 end

@@ -16,11 +16,6 @@ end
 EOF
   }
 
-  unless File.exist?("vendor/fluentd/Gemfile")
-    puts "git submodule update -i"
-    system("git submodule update -i")
-  end
-
   gem.name        = %q{fluent-logger}
   gem.version     = version
   # gem.platform  = Gem::Platform::RUBY
