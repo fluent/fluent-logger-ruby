@@ -19,7 +19,7 @@ require 'msgpack'
 require 'socket'
 require 'monitor'
 require 'logger'
-require 'yajl'
+require 'json'
 
 module Fluent
   module Logger
@@ -125,7 +125,7 @@ module Fluent
         begin
           msg.to_msgpack
         rescue NoMethodError
-          Yajl::Parser.parse( Yajl::Encoder.encode(msg) ).to_msgpack
+          JSON.parse(JSON.generate(msg)).to_msgpack
         end
       end
 

@@ -19,15 +19,15 @@ module Fluent
   module Logger
     class TextLogger < LoggerBase
       def initialize
-        require 'yajl'
+        require 'json'
         @time_format = "%b %e %H:%M:%S"
       end
 
       def post_with_time(tag, map, time)
         a = [time.strftime(@time_format), " ", tag, ":"]
-        map.each_pair {|k,v|
+        map.each_pair { |k,v|
           a << " #{k}="
-          a << Yajl::Encoder.encode(v)
+          a << JSON.dump(v)
         }
         post_text a.join
         true
