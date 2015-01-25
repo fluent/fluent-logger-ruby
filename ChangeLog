@@ -1,3 +1,8 @@
+Release 0.5.0 - 2015/01/25
+
+  * Use json instead of yajl. If you pass an invalid string to post, you may get 'invalid byte sequence' error.
+  * Support JRuby environment
+
 Release 0.4.10 - 2015/01/10
 
   * Call closed? in connect? method to check connection is closed or not
