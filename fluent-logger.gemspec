@@ -30,7 +30,6 @@ EOF
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.require_paths = ['lib']
 
-  gem.add_dependency 'yajl-ruby', '~> 1.0'
   gem.add_dependency "msgpack", [">= 0.4.4", "!= 0.5.0", "!= 0.5.1", "!= 0.5.2", "!= 0.5.3", "< 0.6.0"]
   gem.add_development_dependency 'rake', '>= 0.9.2'
   gem.add_development_dependency 'rspec', '>= 3.0.0'
