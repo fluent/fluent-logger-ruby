@@ -44,7 +44,11 @@ describe Fluent::Logger::FluentLogger do
 
   let(:output) {
     sleep 0.0001 # next tick
-    Fluent::Engine.match('logger-test').output
+    if Fluent::Engine.respond_to?(:match)
+      Fluent::Engine.match('logger-test').output
+    else
+      Fluent::Engine.root_agent.event_router.match('logger-test')
+    end
   }
 
   let(:queue) {
