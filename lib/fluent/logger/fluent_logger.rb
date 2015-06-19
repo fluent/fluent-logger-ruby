@@ -34,7 +34,7 @@ module Fluent
         r / RECONNECT_WAIT_INCR_RATE
       }
 
-      def initialize(tag_prefix = '', *args)
+      def initialize(tag_prefix = nil, *args)
         super()
 
         options = {
