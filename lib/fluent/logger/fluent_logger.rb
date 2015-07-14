@@ -82,8 +82,6 @@ module Fluent
           @logger.error "Failed to connect fluentd: #{$!}"
           @logger.error "Connection will be retried."
         end
-
-        at_exit { close }
       end
 
       attr_accessor :limit, :logger, :log_reconnect_error_threshold
