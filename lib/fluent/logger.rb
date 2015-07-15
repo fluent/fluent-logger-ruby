@@ -63,5 +63,13 @@ module Fluent
     def self.default=(logger)
       @@default_logger = logger
     end
+
+    def method_missing(m, message)
+      if m.to_s.in?(%w(debug info warn error fatal any))
+        @@default_logger.post(m.to_s, { message: message })
+      else
+        super
+      end
+    end
   end
 end
