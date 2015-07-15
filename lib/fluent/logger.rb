@@ -65,7 +65,7 @@ module Fluent
     end
 
     def method_missing(m, message)
-      if m.to_s.in?(%w(debug info warn error fatal any))
+      if m.to_s.in?(%w(debug info warn error fatal))
         @@default_logger.post(m.to_s, { message: message })
       else
         super
