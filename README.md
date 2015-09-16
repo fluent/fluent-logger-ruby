@@ -1,4 +1,7 @@
 # Fluent logger
+
+[![Build Status](https://travis-ci.org/fluent/fluent-logger-ruby.svg?branch=master)](https://travis-ci.org/fluent/fluent-logger-ruby)
+
 A structured event logger
 
 ## Examples
