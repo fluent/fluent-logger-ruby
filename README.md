@@ -56,6 +56,33 @@ Fluent::Logger::ConsoleLogger.open(io)
 Fluent::Logger::NullLogger.open
 ```
 
+## Buffer overflow
+
+You can inject your own custom object to handle buffer overflow in the event of connection failure. This will mitigate the loss of data instead of simply throwing data away.
+
+Your object must implement a `flush` method which accepts a single argument, which will be the internal buffer of messages from the logger. A typical use-case for this would be writing to disk or possibly writing to Redis.
+
+##### Example 
+```
+class BufferOverflowHandler
+  attr_accessor :buffer
+
+  def flush(messages)
+    @buffer ||= []
+    MessagePack::Unpacker.new.feed_each(messages) do |msg|
+      @buffer << msg
+    end
+  end
+end
+```
+
+Then inject this class into the logger like this:
+```
+Fluent::Logger::FluentLogger.new(nil, 
+  :host => 'localhost', :port => 24224,
+  :buffer_overflow_handler => BufferOverflowHandler.new)
+```
+
 |name|description|
 |---|---|
 |Web site|http://fluentd.org/|
