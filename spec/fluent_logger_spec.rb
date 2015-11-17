@@ -99,7 +99,7 @@ EOF
         args = %W(-h localhost -p #{fluentd_port} -t logger-test.tag -v a=b -v foo=bar)
         Fluent::Logger::FluentLogger::CUI.post(args)
         wait_transfer
-        queue.last.should == ['logger-test.tag', {'a' => 'b', 'foo' => 'bar'}]
+        expect(queue.last).to eq ['logger-test.tag', {'a' => 'b', 'foo' => 'bar'}]
       }
     end
 
@@ -107,25 +107,25 @@ EOF
       it ('success') { 
         expect(logger.post('tag', {'a' => 'b'})).to be true
         wait_transfer
-        queue.last.should == ['logger-test.tag', {'a' => 'b'}]
+        expect(queue.last).to eq ['logger-test.tag', {'a' => 'b'}]
       }
 
       it ('close after post') {
-        logger.should be_connect
+        expect(logger).to be_connect
         logger.close
-        logger.should_not be_connect
+        expect(logger).not_to be_connect
 
         logger.post('tag', {'b' => 'c'})
-        logger.should be_connect
+        expect(logger).to be_connect
         wait_transfer
-        queue.last.should == ['logger-test.tag', {'b' => 'c'}]
+        expect(queue.last).to eq ['logger-test.tag', {'b' => 'c'}]
       }
 
       it ('large data') {
         data = {'a' => ('b' * 1000000)}
         logger.post('tag', data)
         wait_transfer
-        queue.last.should == ['logger-test.tag', data]
+        expect(queue.last).to eq ['logger-test.tag', data]
       }
 
       it ('msgpack unsupport data') {
@@ -137,9 +137,9 @@ EOF
         logger.post('tag', data)
         wait_transfer
         logger_data = queue.last.last
-        logger_data['time'].should == '2008-09-01 10:05:00 UTC'
-        logger_data['proc'].should be
-        logger_data['object'].should be
+        expect(logger_data['time']).to eq '2008-09-01 10:05:00 UTC'
+        expect(logger_data['proc']).to be_truthy
+        expect(logger_data['object']).to be_truthy
       }
 
       it ('msgpack and JSON unsupport data') {
@@ -151,7 +151,7 @@ EOF
         }
         logger.post('tag', data)
         wait_transfer
-        queue.last.should be_nil
+        expect(queue.last).to be_nil
         logger_io.rewind
         logger_io.read =~ /FluentLogger: Can't convert to msgpack:/
       }
@@ -171,24 +171,21 @@ EOF
 
     context "initializer" do
       it "backward compatible" do
-        port = fluentd_port
-        fluent_logger = Fluent::Logger::FluentLogger.new('logger-test', 'localhost', port)
-        fluent_logger.instance_eval {
-          @host.should == 'localhost'
-          @port.should == port
-        }
+        fluent_logger = Fluent::Logger::FluentLogger.new('logger-test', 'localhost', fluentd_port)
+        host, port = fluent_logger.instance_eval { [@host, @port] }
+        expect(host).to eq 'localhost'
+        expect(port).to eq fluentd_port
       end
 
       it "hash argument" do
-        port = fluentd_port
         fluent_logger = Fluent::Logger::FluentLogger.new('logger-test', {
           :host => 'localhost',
-          :port => port
+          :port => fluentd_port
         })
-        fluent_logger.instance_eval {
-          @host.should == 'localhost'
-          @port.should == port
-        }
+
+        host, port = fluent_logger.instance_eval { [@host, @port] }
+        expect(host).to eq 'localhost'
+        expect(port).to eq fluentd_port
       end
     end
   end
@@ -198,39 +195,39 @@ EOF
       it ('post & close') {
         expect(logger.post('tag', {'a' => 'b'})).to be false
         wait_transfer  # even if wait
-        queue.last.should be_nil
+        expect(queue.last).to be_nil
         logger.close
         logger_io.rewind
         log = logger_io.read
-        log.should =~ /Failed to connect/
-        log.should =~ /Can't send logs to/
+        expect(log).to match /Failed to connect/
+        expect(log).to match /Can't send logs to/
       }
 
       it ('post limit over') do
         logger.limit = 100
         logger.post('tag', {'a' => 'b'})
         wait_transfer  # even if wait
-        queue.last.should be_nil
+        expect(queue.last).to be_nil
 
         logger_io.rewind
-        logger_io.read.should_not =~ /Can't send logs to/
+        expect(logger_io.read).not_to match /Can't send logs to/
 
         logger.post('tag', {'a' => ('c' * 1000)})
         logger_io.rewind
-        logger_io.read.should =~ /Can't send logs to/
+        expect(logger_io.read).to match /Can't send logs to/
       end
 
       it ('log connect error once') do
-        Fluent::Logger::FluentLogger.any_instance.stub(:suppress_sec).and_return(-1)
+        allow_any_instance_of(Fluent::Logger::FluentLogger).to receive(:suppress_sec).and_return(-1)
         logger.log_reconnect_error_threshold = 1
-        Fluent::Logger::FluentLogger.any_instance.should_receive(:log_reconnect_error).once.and_call_original
+        expect_any_instance_of(Fluent::Logger::FluentLogger).to receive(:log_reconnect_error).once.and_call_original
 
         logger.post('tag', {'a' => 'b'})
         wait_transfer  # even if wait
         logger.post('tag', {'a' => 'b'})
         wait_transfer  # even if wait
         logger_io.rewind
-        logger_io.read.should =~ /Failed to connect/
+        expect(logger_io.read).to match /Failed to connect/
       end
     end
   end
