@@ -109,7 +109,7 @@ module Fluent
             rescue => e
               set_last_error(e)
               @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
-              flush_buffer_overflow_handler(@pending)
+              call_buffer_overflow_handler(@pending)
             end
           end
           @con.close if connect?
@@ -171,7 +171,7 @@ module Fluent
             set_last_error(e)
             if @pending.bytesize > @limit
               @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
-              flush_buffer_overflow_handler(@pending)
+              call_buffer_overflow_handler(@pending)
               @pending = nil
             end
             @con.close if connect?
@@ -221,12 +221,12 @@ module Fluent
         raise e
       end
 
-      def flush_buffer_overflow_handler(pending)
+      def call_buffer_overflow_handler(pending)
         if @buffer_overflow_handler
-          @buffer_overflow_handler.flush(pending)
+          @buffer_overflow_handler.call(pending)
         end
       rescue Exception => e
-        @logger.error("FluentLogger: Can't flush buffer overflow handler: #{$!}")
+        @logger.error("FluentLogger: Can't call buffer overflow handler: #{$!}")
       end
 
       def log_reconnect_error

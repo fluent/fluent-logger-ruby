@@ -248,7 +248,9 @@ EOF
           end
         end
       end
-      let(:buffer_overflow_handler) { BufferOverflowHandler.new }
+
+      let(:handler) { BufferOverflowHandler.new }
+      let(:buffer_overflow_handler) { Proc.new { |messages| handler.flush(messages) } }
 
       it ('post limit over') do
         logger.limit = 100
@@ -265,7 +267,7 @@ EOF
         logger_io.rewind
         logger_io.read.should =~ /Can't send logs to/
 
-        buffer = buffer_overflow_handler.buffer
+        buffer = handler.buffer
 
         buffer[0][0].should == 'logger-test.tag'
         buffer[0][1].should.to_s =~ /\d{10}/

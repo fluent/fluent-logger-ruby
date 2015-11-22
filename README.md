@@ -58,11 +58,11 @@ Fluent::Logger::NullLogger.open
 
 ## Buffer overflow
 
-You can inject your own custom object to handle buffer overflow in the event of connection failure. This will mitigate the loss of data instead of simply throwing data away.
+You can inject your own custom proc to handle buffer overflow in the event of connection failure. This will mitigate the loss of data instead of simply throwing data away.
 
-Your object must implement a `flush` method which accepts a single argument, which will be the internal buffer of messages from the logger. A typical use-case for this would be writing to disk or possibly writing to Redis.
+Your proc must accept a single argument, which will be the internal buffer of messages from the logger. A typical use-case for this would be writing to disk or possibly writing to Redis.
 
-##### Example 
+##### Example
 ```
 class BufferOverflowHandler
   attr_accessor :buffer
@@ -74,13 +74,12 @@ class BufferOverflowHandler
     end
   end
 end
-```
 
-Then inject this class into the logger like this:
-```
-Fluent::Logger::FluentLogger.new(nil, 
+handler = Proc.new { |messages| BufferOverflowHandler.new.flush(messages) }
+
+Fluent::Logger::FluentLogger.new(nil,
   :host => 'localhost', :port => 24224,
-  :buffer_overflow_handler => BufferOverflowHandler.new)
+  :buffer_overflow_handler => handler)
 ```
 
 |name|description|
