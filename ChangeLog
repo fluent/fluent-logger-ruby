@@ -1,3 +1,9 @@
+Release 0.5.1 - 2015/11/24
+
+  * Allow injection of buffer overflow handler
+  * tag_prefix now default to nil
+  * LoggerBase.open follows README
+
 Release 0.5.0 - 2015/01/25
 
   * Use json instead of yajl. If you pass an invalid string to post, you may get 'invalid byte sequence' error.
