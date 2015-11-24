@@ -10,7 +10,7 @@ require 'stringio'
 require 'fluent/logger/fluent_logger/cui'
 require 'plugin/out_test'
 
-$log = Fluent::Log.new(StringIO.new) # XXX should remove $log from fluentd 
+$log = Fluent::Log.new(StringIO.new) # XXX should remove $log from fluentd
 
 describe Fluent::Logger::FluentLogger do
   WAIT = ENV['WAIT'] ? ENV['WAIT'].to_f : 0.1
@@ -32,11 +32,14 @@ describe Fluent::Logger::FluentLogger do
     @logger_io = StringIO.new
     logger = ::Logger.new(@logger_io)
     Fluent::Logger::FluentLogger.new('logger-test', {
-      :host   => 'localhost', 
+      :host   => 'localhost',
       :port   => fluentd_port,
       :logger => logger,
+      :buffer_overflow_handler => buffer_overflow_handler
     })
   }
+
+  let(:buffer_overflow_handler) { nil }
 
   let(:logger_io) {
     @logger_io
@@ -104,7 +107,7 @@ EOF
     end
 
     context('post') do
-      it ('success') { 
+      it ('success') {
         expect(logger.post('tag', {'a' => 'b'})).to be true
         wait_transfer
         expect(queue.last).to eq ['logger-test.tag', {'a' => 'b'}]
@@ -189,7 +192,7 @@ EOF
       end
     end
   end
-  
+
   context "not running fluentd" do
     context('fluent logger interface') do
       it ('post & close') {
@@ -228,6 +231,48 @@ EOF
         wait_transfer  # even if wait
         logger_io.rewind
         expect(logger_io.read).to match /Failed to connect/
+      end
+    end
+
+    context "when a buffer overflow handler is provided" do
+      class BufferOverflowHandler
+        attr_accessor :buffer
+
+        def flush(messages)
+          @buffer ||= []
+          MessagePack::Unpacker.new.feed_each(messages) do |msg|
+            @buffer << msg
+          end
+        end
+      end
+
+      let(:handler) { BufferOverflowHandler.new }
+      let(:buffer_overflow_handler) { Proc.new { |messages| handler.flush(messages) } }
+
+      it ('post limit over') do
+        logger.limit = 100
+        event_1 = {'a' => 'b'}
+        logger.post('tag', event_1)
+        wait_transfer  # even if wait
+        queue.last.should be_nil
+
+        logger_io.rewind
+        logger_io.read.should_not =~ /Can't send logs to/
+
+        event_2 = {'a' => ('c' * 1000)}
+        logger.post('tag', event_2)
+        logger_io.rewind
+        logger_io.read.should =~ /Can't send logs to/
+
+        buffer = handler.buffer
+
+        buffer[0][0].should == 'logger-test.tag'
+        buffer[0][1].should.to_s =~ /\d{10}/
+        buffer[0][2].should == event_1
+
+        buffer[1][0].should == 'logger-test.tag'
+        buffer[1][1].should.to_s =~ /\d{10}/
+        buffer[1][2].should == event_2
       end
     end
   end

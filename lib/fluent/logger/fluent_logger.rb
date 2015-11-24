@@ -62,6 +62,8 @@ module Fluent
         @limit = options[:buffer_limit] || BUFFER_LIMIT
         @log_reconnect_error_threshold = options[:log_reconnect_error_threshold] ||  RECONNECT_WAIT_MAX_COUNT
 
+        @buffer_overflow_handler = options[:buffer_overflow_handler]
+
         if logger = options[:logger]
           @logger = logger
         else
@@ -107,6 +109,7 @@ module Fluent
             rescue => e
               set_last_error(e)
               @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
+              call_buffer_overflow_handler(@pending)
             end
           end
           @con.close if connect?
@@ -168,6 +171,7 @@ module Fluent
             set_last_error(e)
             if @pending.bytesize > @limit
               @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
+              call_buffer_overflow_handler(@pending)
               @pending = nil
             end
             @con.close if connect?
@@ -215,6 +219,14 @@ module Fluent
         end
 
         raise e
+      end
+
+      def call_buffer_overflow_handler(pending)
+        if @buffer_overflow_handler
+          @buffer_overflow_handler.call(pending)
+        end
+      rescue Exception => e
+        @logger.error("FluentLogger: Can't call buffer overflow handler: #{$!}")
       end
 
       def log_reconnect_error
