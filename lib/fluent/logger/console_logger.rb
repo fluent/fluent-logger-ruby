@@ -46,7 +46,7 @@ module Fluent
       end
 
       def close
-        @io.close
+        @io.close unless @io == STDOUT
         self
       end
     end
