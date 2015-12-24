@@ -185,7 +185,7 @@ module Fluent
         unless connect?
           connect!
         end
-        @con.write data
+        @con.write_nonblock data
         #while true
         #  puts "sending #{data.length} bytes"
         #  if data.length > 32*1024
