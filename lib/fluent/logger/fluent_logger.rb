@@ -88,6 +88,8 @@ module Fluent
 
         @level = format_severity_index(options[:level]) || DEBUG
 
+        @progname = options[:progname]
+
         if logger = options[:logger]
           @logger = logger
         else
