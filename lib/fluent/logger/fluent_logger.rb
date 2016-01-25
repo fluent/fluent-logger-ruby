@@ -50,6 +50,12 @@ module Fluent
       end
       include Severity
 
+      # Logging severity threshold (e.g. <tt>Logger::INFO</tt>).
+      attr_accessor :level
+
+      # Program name to include in log messages.
+      attr_accessor :progname
+
       def initialize(tag_prefix = nil, *args)
         super()
 
