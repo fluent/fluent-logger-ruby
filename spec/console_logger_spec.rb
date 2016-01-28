@@ -63,7 +63,7 @@ describe Fluent::Logger::ConsoleLogger do
     it {
       expect {
         Fluent::Logger::ConsoleLogger.new(nil)
-      }.to raise_error
+      }.to raise_error(RuntimeError)
     }
   end
 end
