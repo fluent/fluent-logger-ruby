@@ -15,22 +15,15 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
+require 'fluent/logger/core/base'
+
 module Fluent
   module Logger
     class LoggerBase
+      include Core::Base
+
       def self.open(*args, &block)
         Fluent::Logger.open(self, *args, &block)
-      end
-
-      def post(tag, map)
-        raise ArgumentError.new("Second argument should kind of Hash (tag: #{map})") unless map.kind_of? Hash
-        post_with_time(tag, map, Time.now)
-      end
-
-      #def post_with_time(tag, map)
-      #end
-
-      def close
       end
     end
   end
