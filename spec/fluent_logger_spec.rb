@@ -37,6 +37,16 @@ describe Fluent::Logger::FluentLogger do
     })
   }
 
+  let(:level_logger) {
+    logger = ::Logger.new(@logger_io)
+    Fluent::Logger::LevelFluentLogger.new('logger-test', {
+      :host   => 'localhost',
+      :port   => fluentd_port,
+      :logger => logger,
+      :buffer_overflow_handler => buffer_overflow_handler
+    })
+  }
+
   let(:buffer_overflow_handler) { nil }
 
   let(:logger_io) {
@@ -188,6 +198,101 @@ EOF
         expect {
           logger.post('tag', data)
         }.to raise_error(ArgumentError)
+      }
+    end
+
+    context('post with level') do
+      it ('success') {
+        expect(level_logger.info('logger test')).to be true
+        wait_transfer
+        expect(queue.last).to eq ['logger-test.info', {'level' => 'INFO', 'message' => 'logger test' }]
+      }
+
+      it ('add progname') {
+        expect(level_logger.info('some_application'){ 'some application running' }).to be true
+        wait_transfer
+        expect(queue.last).to eq ['logger-test.info', {'level' => 'INFO', 'message' => 'some application running', 'progname' => 'some_application' }]
+      }
+
+      it ('send log debug') {
+        expect(level_logger.debug('some_application')).to be true
+        wait_transfer
+        expect(queue.last).to eq ['logger-test.debug', {'level' => 'DEBUG', 'message' => 'some_application' }]
+      }
+
+      it ('send log info') {
+        expect(level_logger.info('some_application')).to be true
+        wait_transfer
+        expect(queue.last).to eq ['logger-test.info', {'level' => 'INFO', 'message' => 'some_application' }]
+      }
+
+      it ('send log warn') {
+        expect(level_logger.warn('some_application')).to be true
+        wait_transfer
+        expect(queue.last).to eq ['logger-test.warn', {'level' => 'WARN', 'message' => 'some_application' }]
+      }
+
+      it ('send log error') {
+        expect(level_logger.error('some_application')).to be true
+        wait_transfer
+        expect(queue.last).to eq ['logger-test.error', {'level' => 'ERROR', 'message' => 'some_application' }]
+      }
+
+      it ('send log fatal') {
+        expect(level_logger.fatal('some_application')).to be true
+        wait_transfer
+        expect(queue.last).to eq ['logger-test.fatal', {'level' => 'FATAL', 'message' => 'some_application' }]
+      }
+
+      it ('not send log debug') {
+        level_logger.level = ::Logger::FATAL
+
+        expect(level_logger.debug('some_application')).to be true
+        wait_transfer
+        expect(queue).to eq []
+      }
+
+      it ('not send log info') {
+        level_logger.level = ::Logger::FATAL
+
+        expect(level_logger.info('some_application')).to be true
+        wait_transfer
+        expect(queue).to eq []
+      }
+
+      it ('not send log warn') {
+        level_logger.level = ::Logger::FATAL
+
+        expect(level_logger.warn('some_application')).to be true
+        wait_transfer
+        expect(queue).to eq []
+      }
+
+      it ('not send log error') {
+        level_logger.level = ::Logger::FATAL
+
+        expect(level_logger.error('some_application')).to be true
+        wait_transfer
+        expect(queue).to eq []
+      }
+
+      it ('define formatter') {
+        level_logger.level = ::Logger::DEBUG
+        level_logger.formatter = proc do |severity, datetime, progname, message|
+          map = { level: severity.class == Fixnum ? %w(DEBUG INFO WARN ERROR FATAL ANY)[severity] : severity }
+          map[:message] = message if message
+          map[:progname] = progname if progname
+          map[:stage] = "development"
+          map[:service_name] = "some service"
+          map
+        end
+
+        expect(level_logger.error('some_application')).to be true
+        wait_transfer
+        expect(queue.last).to eq [
+          'logger-test.error',
+          {'level' => 'ERROR', 'message' => 'some_application', 'stage' => 'development', 'service_name' => 'some service'}
+        ]
       }
     end
 
