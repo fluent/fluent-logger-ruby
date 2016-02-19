@@ -254,25 +254,25 @@ EOF
         event_1 = {'a' => 'b'}
         logger.post('tag', event_1)
         wait_transfer  # even if wait
-        queue.last.should be_nil
+        expect(queue.last).to be(nil)
 
         logger_io.rewind
-        logger_io.read.should_not =~ /Can't send logs to/
+        expect(logger_io.read).not_to match(/Can't send logs to/)
 
         event_2 = {'a' => ('c' * 1000)}
         logger.post('tag', event_2)
         logger_io.rewind
-        logger_io.read.should =~ /Can't send logs to/
+        expect(logger_io.read).to match(/Can't send logs to/)
 
         buffer = handler.buffer
 
-        buffer[0][0].should == 'logger-test.tag'
-        buffer[0][1].should.to_s =~ /\d{10}/
-        buffer[0][2].should == event_1
+        expect(buffer[0][0]).to eq('logger-test.tag')
+        expect(buffer[0][1].to_s).to match(/\d{10}/)
+        expect(buffer[0][2]).to eq(event_1)
 
-        buffer[1][0].should == 'logger-test.tag'
-        buffer[1][1].should.to_s =~ /\d{10}/
-        buffer[1][2].should == event_2
+        expect(buffer[1][0]).to eq('logger-test.tag')
+        expect(buffer[1][1].to_s).to match(/\d{10}/)
+        expect(buffer[1][2]).to eq(event_2)
       end
     end
   end

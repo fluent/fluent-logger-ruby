@@ -18,9 +18,9 @@ describe Fluent::Logger::TestLogger do
       its("last.tag")  { should == "tag2" }
 
       it("tag_queue") {
-        logger.tag_queue('tag1').size.should == 1
-        logger.tag_queue('tag2').size.should == 1
-        logger.tag_queue('tag3').size.should == 0
+        expect(logger.tag_queue('tag1').size).to eq 1
+        expect(logger.tag_queue('tag2').size).to eq 1
+        expect(logger.tag_queue('tag3').size).to eq 0
       }
     end
 

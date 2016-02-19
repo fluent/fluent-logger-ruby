@@ -7,8 +7,8 @@ describe Fluent::Logger::NullLogger do
 
     context "post" do
       it('false') {
-        logger.post('tag1', {:foo => :bar}).should == false
-        logger.post('tag2', {:foo => :baz}).should == false
+        expect(logger.post('tag1', {:foo => :bar})).to be false
+        expect(logger.post('tag2', {:foo => :baz})).to be false
       }
     end
   end
