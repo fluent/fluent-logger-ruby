@@ -6,5 +6,5 @@ gemspec
 gem "simplecov", :require => false
 gem "simplecov-vim"
 
-gem "fluentd"
+gem "fluentd", '< 0.14.0'
 gem 'test-unit'
