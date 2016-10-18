@@ -103,6 +103,16 @@ module Fluent
           @con && !@con.closed?
         end
 
+        def reopen
+          begin
+            close
+            connect!
+          rescue => e
+            set_last_error(e)
+            @logger.error "Failed to reconnect fluentd: #{$!}"
+          end
+        end
+
         private
         def to_msgpack(msg)
           begin
