@@ -26,7 +26,6 @@ require 'fluent/logger/core/fluent_logger_base'
 module Fluent
   module Logger
     class LevelFluentLogger < ::Logger
-      include Core::Base
       include Core::FluentLoggerBase
 
       def initialize(tag_prefix = nil, *args)
@@ -38,6 +37,7 @@ module Fluent
           map[:progname] = progname if progname
           map
         end
+        @fluent_logger = FluentLogger.new(tag_prefix, *args)
       end
 
       def add(severity, message = nil, progname = nil, &block)
@@ -55,7 +55,7 @@ module Fluent
           end
         end
         map = format_message(severity, Time.now, progname, message)
-        post(format_severity(severity).downcase, map)
+        @fluent_logger.post(format_severity(severity).downcase, map)
         true
       end
     end

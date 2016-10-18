@@ -20,7 +20,17 @@ require 'fluent/logger/core/base'
 module Fluent
   module Logger
     class LoggerBase
-      include Core::Base
+
+      def post(tag, map)
+        raise ArgumentError.new("Second argument must be a kind of Hash (#{tag}: #{map})") unless map.kind_of? Hash
+        post_with_time(tag, map, Time.now)
+      end
+
+      #def post_with_time(tag, map)
+      #end
+
+      def close
+      end
 
       def self.open(*args, &block)
         Fluent::Logger.open(self, *args, &block)
