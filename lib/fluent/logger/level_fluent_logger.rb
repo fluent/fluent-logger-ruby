@@ -20,7 +20,6 @@ require 'socket'
 require 'monitor'
 require 'logger'
 require 'json'
-require 'fluent/logger/core/base'
 require 'fluent/logger/core/fluent_logger_base'
 
 module Fluent
