@@ -30,7 +30,7 @@ module Fluent
       include Core::FluentLoggerBase
 
       def initialize(tag_prefix = nil, *args)
-        super
+        initialize_proc(tag_prefix, *args)
         @level = ::Logger::DEBUG
         @default_formatter = proc do |severity, datetime, progname, message|
           map = { level: format_severity(severity) }

@@ -20,6 +20,10 @@ module Fluent
         attr_reader :last_error, :options
 
         def initialize(tag_prefix = nil, *args)
+          initialize_proc(tag_prefix, *args)
+        end
+
+        def initialize_proc(tag_prefix = nil, *args)
           options = {
             :host => 'localhost',
             :port => 24224
