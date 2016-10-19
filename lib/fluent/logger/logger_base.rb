@@ -19,6 +19,9 @@
 module Fluent
   module Logger
     class LoggerBase
+      def self.open(*args, &block)
+        Fluent::Logger.open(self, *args, &block)
+      end
 
       def post(tag, map)
         raise ArgumentError.new("Second argument must be a kind of Hash (#{tag}: #{map})") unless map.kind_of? Hash
@@ -29,10 +32,6 @@ module Fluent
       #end
 
       def close
-      end
-
-      def self.open(*args, &block)
-        Fluent::Logger.open(self, *args, &block)
       end
     end
   end

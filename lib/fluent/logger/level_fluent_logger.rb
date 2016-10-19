@@ -20,15 +20,12 @@ require 'socket'
 require 'monitor'
 require 'logger'
 require 'json'
-require 'fluent/logger/core/fluent_logger_base'
 
 module Fluent
   module Logger
     class LevelFluentLogger < ::Logger
-      include Core::FluentLoggerBase
 
       def initialize(tag_prefix = nil, *args)
-        initialize_proc(tag_prefix, *args)
         @level = ::Logger::DEBUG
         @default_formatter = proc do |severity, datetime, progname, message|
           map = { level: format_severity(severity) }
@@ -56,6 +53,19 @@ module Fluent
         map = format_message(severity, Time.now, progname, message)
         @fluent_logger.post(format_severity(severity).downcase, map)
         true
+      end
+
+      def close
+        @fluent_logger.close
+      end
+
+      def reopen
+        begin
+          @fluent_logger.close
+          @fluent_logger.connect!
+        rescue => e
+          @fluent_logger.log_reconnect_error
+        end
       end
     end
   end
