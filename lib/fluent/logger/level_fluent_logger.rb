@@ -60,12 +60,9 @@ module Fluent
       end
 
       def reopen
-        begin
-          @fluent_logger.close
-          @fluent_logger.connect!
-        rescue => e
-          @fluent_logger.log_reconnect_error
-        end
+        @fluent_logger.close
+        # we do not call #connect! here because 1) FluentLogger#connect! is not a public method
+        # 2) #post automatically connects if its connection is closed
       end
     end
   end

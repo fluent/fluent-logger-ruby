@@ -123,29 +123,6 @@ module Fluent
         @con && !@con.closed?
       end
 
-      def log_reconnect_error
-        @logger.error("FluentLogger: Can't connect to #{@host}:#{@port}(#{@connect_error_history.size} retried): #{$!}")
-      end
-
-      def connect!
-        @con = TCPSocket.new(@host, @port)
-        @con.sync = true
-        @connect_error_history.clear
-        @logged_reconnect_error = false
-      rescue => e
-        @connect_error_history << Time.now.to_i
-        if @connect_error_history.size > RECONNECT_WAIT_MAX_COUNT
-          @connect_error_history.shift
-        end
-
-        if @connect_error_history.size >= @log_reconnect_error_threshold && !@logged_reconnect_error
-          log_reconnect_error
-          @logged_reconnect_error = true
-        end
-
-        raise e
-      end
-
       private
       def to_msgpack(msg)
         begin
@@ -225,12 +202,35 @@ module Fluent
         true
       end
 
+      def connect!
+        @con = TCPSocket.new(@host, @port)
+        @con.sync = true
+        @connect_error_history.clear
+        @logged_reconnect_error = false
+      rescue => e
+        @connect_error_history << Time.now.to_i
+        if @connect_error_history.size > RECONNECT_WAIT_MAX_COUNT
+          @connect_error_history.shift
+        end
+
+        if @connect_error_history.size >= @log_reconnect_error_threshold && !@logged_reconnect_error
+          log_reconnect_error
+          @logged_reconnect_error = true
+        end
+
+        raise e
+      end
+
       def call_buffer_overflow_handler(pending)
         if @buffer_overflow_handler
           @buffer_overflow_handler.call(pending)
         end
       rescue Exception => e
         @logger.error("FluentLogger: Can't call buffer overflow handler: #{$!}")
+      end
+
+      def log_reconnect_error
+        @logger.error("FluentLogger: Can't connect to #{@host}:#{@port}(#{@connect_error_history.size} retried): #{$!}")
       end
 
       def set_last_error(e)
