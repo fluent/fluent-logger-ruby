@@ -39,6 +39,63 @@ log.post("access", {"agent"=>"foo"})
 # output: myapp.access {"agent":"foo"}
 ```
 
+### Standard ::Logger compatible interface
+
+#### Example1
+
+```ruby
+require 'fluent-logger'
+f = Fluent::Logger::LevelFluentLogger.new('fluent')
+
+f.info("some application running.")
+# output: fluent.info: {"level":"INFO","message":"some application running."}
+
+f.warn("some application running.")
+# output: fluent.warn: {"level":"WARN","message":"some application running."}
+```
+
+#### Example2(add progname)
+
+```ruby
+require 'fluent-logger'
+f = Fluent::Logger::LevelFluentLogger.new('fluent')
+f.info("some_application"){"some application running."}
+# output: fluent.info: {"level":"INFO","message":"some application running.","progname":"some_application"}
+```
+
+#### Example3(set log level)
+
+```ruby
+require 'fluent-logger'
+f = Fluent::Logger::LevelFluentLogger.new('fluent')
+f.level = Logger::WARN
+f.info("some_application"){"some application running."}
+```
+
+Log level is ERROR so no output.
+
+default log level is debug.
+
+
+#### Example4(customize format for Rails)
+
+```ruby
+require 'fluent-logger'
+f = Fluent::Logger::LevelFluentLogger.new('fluent')
+
+f.formatter = proc do |severity, datetime, progname, message|
+  map = { level: severity.class == Fixnum ? %w(DEBUG INFO WARN ERROR FATAL ANY)[severity] : severity }
+  map[:message] = message if message
+  map[:progname] = progname if progname
+  map[:stage] = ENV['RAILS_ENV']
+  map[:service_name] = "SomeApp"
+  map
+end
+
+f.info("some_application"){"some application running."}
+# output: fluent.info: {"level":"INFO","message":"some application running.","progname":"some_application","stage":"production","service_name":"SomeApp"}
+```
+
 ## Loggers
 
 ### Fluent
