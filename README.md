@@ -139,6 +139,8 @@ Fluent::Logger::FluentLogger.new(nil,
   :buffer_overflow_handler => handler)
 ```
 
+## Information
+
 |name|description|
 |---|---|
 |Web site|http://fluentd.org/|
