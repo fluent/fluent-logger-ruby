@@ -3,12 +3,25 @@ rvm:
  - 2.0.0
  - 2.1
  - 2.2
- - 2.3.0
+ - 2.3.1
+ - ruby-head
  - rbx
+
+gemfile:
+ - Gemfile
+ - Gemfile.v0.12
 
 before_install: gem update bundler
 script: bundle exec rake spec
 
+sudo: false
+
 matrix:
   allow_failures:
+    - rvm: ruby-head
     - rvm: rbx
+  exclude:
+    - rvm: 1.9.3
+      gemfile: Gemfile
+    - rvm: 2.0
+      gemfile: Gemfile
