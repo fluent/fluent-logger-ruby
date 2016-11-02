@@ -10,8 +10,6 @@ require 'stringio'
 require 'fluent/logger/fluent_logger/cui'
 require 'plugin/out_test'
 
-$log = Fluent::Log.new(StringIO.new) # XXX should remove $log from fluentd
-
 describe Fluent::Logger::FluentLogger do
   WAIT = ENV['WAIT'] ? ENV['WAIT'].to_f : 0.1
 
@@ -71,6 +69,16 @@ describe Fluent::Logger::FluentLogger do
   end
 
   context "running fluentd" do
+    before(:all) do
+      @server = nil
+      if defined?(ServerEngine) # for v0.14. in_forward requires socket manager server
+        socket_manager_path = ServerEngine::SocketManager::Server.generate_path
+        @server = ServerEngine::SocketManager::Server.open(socket_manager_path)
+        ENV['SERVERENGINE_SOCKETMANAGER_PATH'] = socket_manager_path.to_s
+      end
+      @server
+    end
+
     before(:each) do
       @config = Fluent::Config.parse(<<EOF, '(logger-spec)', '(logger-spec-dir)', true)
 <source>
@@ -92,9 +100,20 @@ EOF
     end
 
     after(:each) do
-      @coolio_default_loop.stop
-      Fluent::Engine.send :shutdown
+      @coolio_default_loop.stop rescue nil
+      begin
+        Fluent::Engine.stop
+      rescue => e
+        # for v0.12, calling stop may cause "loop not running" by internal default loop
+        if e.message == "loop not running"
+          Fluent::Engine.send :shutdown
+        end
+      end
       @thread.join
+    end
+
+    after(:all) do
+      @server.close if @server
     end
 
     context('Post by CUI') do
