@@ -1,3 +1,7 @@
+Release 0.6.1 - 2016/11/02
+
+  * Add LevelFluentLogger: Standard Logger compatible interface
+
 Release 0.6.0 - 2016/10/15
 
   * Relax msgpack dependency
