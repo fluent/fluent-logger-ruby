@@ -1,3 +1,8 @@
+Release 0.6.0 - 2016/10/15
+
+  * Relax msgpack dependency
+  * ConsoleLogger: close io if io is stdout
+
 Release 0.5.1 - 2015/11/24
 
   * Allow injection of buffer overflow handler
