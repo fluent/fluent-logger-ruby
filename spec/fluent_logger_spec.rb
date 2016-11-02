@@ -1,29 +1,15 @@
 
 require 'spec_helper'
+require 'support/dummy_serverengine'
+require 'support/dummy_fluentd'
 
-require 'fluent/load'
-require 'fluent/test'
-require 'tempfile'
 require 'logger'
-require 'socket'
 require 'stringio'
 require 'fluent/logger/fluent_logger/cui'
-require 'plugin/out_test'
 
 describe Fluent::Logger::FluentLogger do
-  WAIT = ENV['WAIT'] ? ENV['WAIT'].to_f : 0.1
-
-  let(:fluentd_port) {
-    port = 60001
-    loop do
-      begin
-        TCPServer.open('localhost', port).close
-        break
-      rescue Errno::EADDRINUSE
-        port += 1
-      end
-    end
-    port
+  let(:fluentd) {
+    DummyFluentd.new
   }
 
   let(:logger) {
@@ -31,7 +17,7 @@ describe Fluent::Logger::FluentLogger do
     logger = ::Logger.new(@logger_io)
     Fluent::Logger::FluentLogger.new('logger-test', {
       :host   => 'localhost',
-      :port   => fluentd_port,
+      :port   => fluentd.port,
       :logger => logger,
       :buffer_overflow_handler => buffer_overflow_handler
     })
@@ -43,93 +29,38 @@ describe Fluent::Logger::FluentLogger do
     @logger_io
   }
 
-  let(:output) {
-    sleep 0.0001 # next tick
-    if Fluent::Engine.respond_to?(:match)
-      Fluent::Engine.match('logger-test').output
-    else
-      Fluent::Engine.root_agent.event_router.match('logger-test')
-    end
-  }
-
-  let(:queue) {
-    queue = []
-    output.emits.each {|tag, time, record|
-      queue << [tag, record]
-    }
-    queue
-  }
-
-  after(:each) do
-    output.emits.clear rescue nil
-  end
-
-  def wait_transfer
-    sleep WAIT
-  end
-
   context "running fluentd" do
     before(:all) do
-      @server = nil
-      if defined?(ServerEngine) # for v0.14. in_forward requires socket manager server
-        socket_manager_path = ServerEngine::SocketManager::Server.generate_path
-        @server = ServerEngine::SocketManager::Server.open(socket_manager_path)
-        ENV['SERVERENGINE_SOCKETMANAGER_PATH'] = socket_manager_path.to_s
-      end
-      @server
+      @serverengine = DummyServerengine.new
+      @serverengine.startup
     end
 
     before(:each) do
-      @config = Fluent::Config.parse(<<EOF, '(logger-spec)', '(logger-spec-dir)', true)
-<source>
-  type forward
-  port #{fluentd_port}
-</source>
-<match logger-test.**>
-  type test
-</match>
-EOF
-      Fluent::Test.setup
-      Fluent::Engine.run_configure(@config)
-      @coolio_default_loop = nil
-      @thread = Thread.new {
-        @coolio_default_loop = Coolio::Loop.default
-        Fluent::Engine.run
-      }
-      wait_transfer
+      fluentd.startup
     end
 
     after(:each) do
-      @coolio_default_loop.stop rescue nil
-      begin
-        Fluent::Engine.stop
-      rescue => e
-        # for v0.12, calling stop may cause "loop not running" by internal default loop
-        if e.message == "loop not running"
-          Fluent::Engine.send :shutdown
-        end
-      end
-      @thread.join
+      fluentd.shutdown
     end
 
     after(:all) do
-      @server.close if @server
+      @serverengine.shutdown
     end
 
     context('Post by CUI') do
       it('post') {
-        args = %W(-h localhost -p #{fluentd_port} -t logger-test.tag -v a=b -v foo=bar)
+        args = %W(-h localhost -p #{fluentd.port} -t logger-test.tag -v a=b -v foo=bar)
         Fluent::Logger::FluentLogger::CUI.post(args)
-        wait_transfer
-        expect(queue.last).to eq ['logger-test.tag', {'a' => 'b', 'foo' => 'bar'}]
+        fluentd.wait_transfer
+        expect(fluentd.queue.last).to eq ['logger-test.tag', {'a' => 'b', 'foo' => 'bar'}]
       }
     end
 
     context('post') do
       it ('success') {
         expect(logger.post('tag', {'a' => 'b'})).to be true
-        wait_transfer
-        expect(queue.last).to eq ['logger-test.tag', {'a' => 'b'}]
+        fluentd.wait_transfer
+        expect(fluentd.queue.last).to eq ['logger-test.tag', {'a' => 'b'}]
       }
 
       it ('close after post') {
@@ -139,15 +70,15 @@ EOF
 
         logger.post('tag', {'b' => 'c'})
         expect(logger).to be_connect
-        wait_transfer
-        expect(queue.last).to eq ['logger-test.tag', {'b' => 'c'}]
+        fluentd.wait_transfer
+        expect(fluentd.queue.last).to eq ['logger-test.tag', {'b' => 'c'}]
       }
 
       it ('large data') {
         data = {'a' => ('b' * 1000000)}
         logger.post('tag', data)
-        wait_transfer
-        expect(queue.last).to eq ['logger-test.tag', data]
+        fluentd.wait_transfer
+        expect(fluentd.queue.last).to eq ['logger-test.tag', data]
       }
 
       it ('msgpack unsupport data') {
@@ -157,8 +88,8 @@ EOF
           'proc'   => proc { 1 },
         }
         logger.post('tag', data)
-        wait_transfer
-        logger_data = queue.last.last
+        fluentd.wait_transfer
+        logger_data = fluentd.queue.last.last
         expect(logger_data['time']).to eq '2008-09-01 10:05:00 UTC'
         expect(logger_data['proc']).to be_truthy
         expect(logger_data['object']).to be_truthy
@@ -172,8 +103,8 @@ EOF
           'NaN'    => (0.0/0.0) # JSON don't convert
         }
         logger.post('tag', data)
-        wait_transfer
-        expect(queue.last).to be_nil
+        fluentd.wait_transfer
+        expect(fluentd.queue.last).to be_nil
         logger_io.rewind
         logger_io.read =~ /FluentLogger: Can't convert to msgpack:/
       }
@@ -193,21 +124,21 @@ EOF
 
     context "initializer" do
       it "backward compatible" do
-        fluent_logger = Fluent::Logger::FluentLogger.new('logger-test', 'localhost', fluentd_port)
+        fluent_logger = Fluent::Logger::FluentLogger.new('logger-test', 'localhost', fluentd.port)
         host, port = fluent_logger.instance_eval { [@host, @port] }
         expect(host).to eq 'localhost'
-        expect(port).to eq fluentd_port
+        expect(port).to eq fluentd.port
       end
 
       it "hash argument" do
         fluent_logger = Fluent::Logger::FluentLogger.new('logger-test', {
           :host => 'localhost',
-          :port => fluentd_port
+          :port => fluentd.port
         })
 
         host, port = fluent_logger.instance_eval { [@host, @port] }
         expect(host).to eq 'localhost'
-        expect(port).to eq fluentd_port
+        expect(port).to eq fluentd.port
       end
     end
   end
@@ -216,8 +147,8 @@ EOF
     context('fluent logger interface') do
       it ('post & close') {
         expect(logger.post('tag', {'a' => 'b'})).to be false
-        wait_transfer  # even if wait
-        expect(queue.last).to be_nil
+        fluentd.wait_transfer  # even if wait
+        expect(fluentd.queue.last).to be_nil
         logger.close
         logger_io.rewind
         log = logger_io.read
@@ -228,8 +159,8 @@ EOF
       it ('post limit over') do
         logger.limit = 100
         logger.post('tag', {'a' => 'b'})
-        wait_transfer  # even if wait
-        expect(queue.last).to be_nil
+        fluentd.wait_transfer  # even if wait
+        expect(fluentd.queue.last).to be_nil
 
         logger_io.rewind
         expect(logger_io.read).not_to match /Can't send logs to/
@@ -245,9 +176,9 @@ EOF
         expect_any_instance_of(Fluent::Logger::FluentLogger).to receive(:log_reconnect_error).once.and_call_original
 
         logger.post('tag', {'a' => 'b'})
-        wait_transfer  # even if wait
+        fluentd.wait_transfer  # even if wait
         logger.post('tag', {'a' => 'b'})
-        wait_transfer  # even if wait
+        fluentd.wait_transfer  # even if wait
         logger_io.rewind
         expect(logger_io.read).to match /Failed to connect/
       end
@@ -272,8 +203,8 @@ EOF
         logger.limit = 100
         event_1 = {'a' => 'b'}
         logger.post('tag', event_1)
-        wait_transfer  # even if wait
-        expect(queue.last).to be(nil)
+        fluentd.wait_transfer  # even if wait
+        expect(fluentd.queue.last).to be(nil)
 
         logger_io.rewind
         expect(logger_io.read).not_to match(/Can't send logs to/)

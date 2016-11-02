@@ -23,7 +23,7 @@ module Fluent
       end
 
       def post(tag, map)
-        raise ArgumentError.new("Second argument should kind of Hash (tag: #{map})") unless map.kind_of? Hash
+        raise ArgumentError.new("Second argument must be a kind of Hash (#{tag}: #{map})") unless map.kind_of? Hash
         post_with_time(tag, map, Time.now)
       end
 
