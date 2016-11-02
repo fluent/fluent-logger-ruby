@@ -64,6 +64,10 @@ module Fluent
         # we do not call #connect! here because 1) FluentLogger#connect! is not a public method
         # 2) #post automatically connects if its connection is closed
       end
+
+      def connect?
+        @fluent_logger.connect?
+      end
     end
   end
 end
