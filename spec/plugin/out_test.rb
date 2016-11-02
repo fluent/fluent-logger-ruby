@@ -14,11 +14,15 @@
 #    limitations under the License.
 #
 
+require 'fluent/output'
+
 module Fluent
   class TestOutput < Output
     Plugin.register_output('test', self)
 
     def initialize
+      super
+
       @emit_streams = []
       @name = nil
     end
@@ -54,15 +58,19 @@ module Fluent
     end
 
     def configure(conf)
+      super
+
       if name = conf['name']
         @name = name
       end
     end
 
     def start
+      super
     end
 
     def shutdown
+      super
     end
 
     def emit(tag, es, chain)
