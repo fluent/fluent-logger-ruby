@@ -23,3 +23,9 @@ matrix:
       gemfile: Gemfile
     - rvm: 2.0.0
       gemfile: Gemfile
+    - rvm: 2.2
+      gemfile: Gemfile.v0.12
+    - rvm: 2.3.1
+      gemfile: Gemfile.v0.12
+    - rvm: ruby-head
+      gemfile: Gemfile.v0.12
