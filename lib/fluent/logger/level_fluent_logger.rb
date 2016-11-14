@@ -28,7 +28,7 @@ module Fluent
       def initialize(tag_prefix = nil, *args)
         @level = ::Logger::DEBUG
         @default_formatter = proc do |severity, datetime, progname, message|
-          map = { level: format_severity(severity) }
+          map = { level: severity }
           map[:message] = message if message
           map[:progname] = progname if progname
           map
@@ -50,7 +50,7 @@ module Fluent
             progname = @progname
           end
         end
-        map = format_message(severity, Time.now, progname, message)
+        map = format_message(format_severity(severity), Time.now, progname, message)
         @fluent_logger.post(format_severity(severity).downcase, map)
         true
       end
