@@ -20,6 +20,8 @@ require 'socket'
 require 'monitor'
 require 'logger'
 require 'json'
+require 'base64'
+require 'securerandom'
 
 module Fluent
   module Logger
@@ -54,6 +56,9 @@ module Fluent
         @tag_prefix = tag_prefix
         @host = options[:host]
         @port = options[:port]
+
+        @require_ack_response = options[:require_ack_response]
+        @ack_response_timeout = options[:ack_response_timeout] || 190
 
         @mon = Monitor.new
         @pending = nil
@@ -98,7 +103,7 @@ module Fluent
       def post_with_time(tag, map, time)
         @logger.debug { "event: #{tag} #{map.to_json}" rescue nil } if @logger.debug?
         tag = "#{@tag_prefix}.#{tag}" if @tag_prefix
-        write [tag, time.to_i, map]
+        write(tag, time.to_i, map)
       end
 
       def close
@@ -140,11 +145,15 @@ module Fluent
         end
       end
 
-      def write(msg)
+      def write(tag, time, map)
         begin
-          data = to_msgpack(msg)
+          record = to_msgpack([time, map])
+          option = {}
+          option['chunk'] = Base64.encode64(([SecureRandom.random_number(1 << 32)] * 4).pack('NNNN')).chomp
+          data = [tag, record, option]
         rescue => e
           set_last_error(e)
+          msg = [tag, time, map]
           @logger.error("FluentLogger: Can't convert to msgpack: #{msg.inspect}: #{$!}")
           return false
         end
@@ -153,23 +162,25 @@ module Fluent
           if @pending
             @pending << data
           else
-            @pending = data
+            @pending = [data]
           end
 
           # suppress reconnection burst
-          if !@connect_error_history.empty? && @pending.bytesize <= @limit
+          if !@connect_error_history.empty? && @pending.to_s.bytesize <= @limit
             if Time.now.to_i - @connect_error_history.last < suppress_sec
               return false
             end
           end
 
           begin
-            send_data(@pending)
+            @pending.each do |pending|
+              send_data(pending)
+            end
             @pending = nil
             true
           rescue => e
             set_last_error(e)
-            if @pending.bytesize > @limit
+            if @pending.to_s.bytesize > @limit
               @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
               call_buffer_overflow_handler(@pending)
               @pending = nil
@@ -185,7 +196,7 @@ module Fluent
         unless connect?
           connect!
         end
-        @con.write data
+        @con.write data.to_msgpack
         #while true
         #  puts "sending #{data.length} bytes"
         #  if data.length > 32*1024
@@ -199,6 +210,22 @@ module Fluent
         #  end
         #  data = data[n..-1]
         #end
+
+        if @require_ack_response && @ack_response_timeout > 0
+          if IO.select([@con], nil, nil, @ack_response_timeout)
+            raw_data = @con.recv(1024)
+
+            if raw_data.empty?
+              raise "Closed connection"
+            else
+              response = MessagePack.unpack(raw_data)
+              option = data.last
+              if response['ack'] != option['chunk']
+                raise "ack in response and chunk id in sent data are different"
+              end
+            end
+          end
+        end
         true
       end
 

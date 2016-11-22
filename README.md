@@ -126,8 +126,8 @@ class BufferOverflowHandler
 
   def flush(messages)
     @buffer ||= []
-    MessagePack::Unpacker.new.feed_each(messages) do |msg|
-      @buffer << msg
+    messages.each do |tag, msg, option|
+      @buffer << [tag, MessagePack.unpack(msg), option]
     end
   end
 end

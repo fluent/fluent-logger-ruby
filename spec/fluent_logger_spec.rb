@@ -153,7 +153,7 @@ describe Fluent::Logger::FluentLogger do
         logger_io.rewind
         log = logger_io.read
         expect(log).to match /Failed to connect/
-        expect(log).to match /Can't send logs to/
+        expect(log).to match /Can\'t send logs to/
       }
 
       it ('post limit over') do
@@ -163,11 +163,11 @@ describe Fluent::Logger::FluentLogger do
         expect(fluentd.queue.last).to be_nil
 
         logger_io.rewind
-        expect(logger_io.read).not_to match /Can't send logs to/
+        expect(logger_io.read).not_to match /Can\'t send logs to/
 
         logger.post('tag', {'a' => ('c' * 1000)})
         logger_io.rewind
-        expect(logger_io.read).to match /Can't send logs to/
+        expect(logger_io.read).to match /Can\'t send logs to/
       end
 
       it ('log connect error once') do
@@ -190,8 +190,8 @@ describe Fluent::Logger::FluentLogger do
 
         def flush(messages)
           @buffer ||= []
-          MessagePack::Unpacker.new.feed_each(messages) do |msg|
-            @buffer << msg
+          messages.each do |tag, msg, option|
+            @buffer << [tag, MessagePack.unpack(msg)].flatten
           end
         end
       end
