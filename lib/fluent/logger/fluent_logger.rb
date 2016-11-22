@@ -34,6 +34,28 @@ module Fluent
         r / RECONNECT_WAIT_INCR_RATE
       }
 
+      module Severity
+        # Low-level information, mostly for developers.
+        DEBUG = 0
+        # Generic (useful) information about system operation.
+        INFO = 1
+        # A warning.
+        WARN = 2
+        # A handleable error condition.
+        ERROR = 3
+        # An unhandleable error that results in a program crash.
+        FATAL = 4
+        # An unknown message that should always be logged.
+        UNKNOWN = 5
+      end
+      include Severity
+
+      # Logging severity threshold (e.g. <tt>Logger::INFO</tt>).
+      attr_accessor :level
+
+      # Program name to include in log messages.
+      attr_accessor :progname
+
       def initialize(tag_prefix = nil, *args)
         super()
 
@@ -63,6 +85,10 @@ module Fluent
         @log_reconnect_error_threshold = options[:log_reconnect_error_threshold] ||  RECONNECT_WAIT_MAX_COUNT
 
         @buffer_overflow_handler = options[:buffer_overflow_handler]
+
+        @level = format_severity_index(options[:level]) || DEBUG
+
+        @progname = options[:progname]
 
         if logger = options[:logger]
           @logger = logger
@@ -123,7 +149,110 @@ module Fluent
         @con && !@con.closed?
       end
 
+      def add(severity, message = nil, progname = nil, &block)
+        severity ||= UNKNOWN
+        if severity < @level
+          return true
+        end
+        progname ||= @progname
+        if message.nil?
+          if block_given?
+            message = yield
+          else
+            message = progname
+            progname = @progname
+          end
+        end
+        map = {}
+        map[:level] = format_severity(severity)
+        map[:message] = message if message
+        map[:progname] = progname if progname
+        post(format_severity(severity).downcase, map)
+        true
+      end
+
+      #
+      # Log a +DEBUG+ message.
+      #
+      # See #info for more information.
+      #
+      def debug(progname = nil, &block)
+        add(DEBUG, nil, progname, &block)
+      end
+
+      #
+      # :call-seq:
+      #   info(message)
+      #   info(progname, &block)
+      #
+      # Log an +INFO+ message.
+      #
+      # +message+:: The message to log; does not need to be a String.
+      # +progname+:: In the block form, this is the #progname to use in the
+      #              log message.  The default can be set with #progname=.
+      # +block+:: Evaluates to the message to log.  This is not evaluated unless
+      #           the logger's level is sufficient to log the message.  This
+      #           allows you to create potentially expensive logging messages that
+      #           are only called when the logger is configured to show them.
+      #
+      # === Examples
+      #
+      #   logger.info("MainApp") { "Received connection from #{ip}" }
+      #   # ...
+      #   logger.info "Waiting for input from user"
+      #   # ...
+      #   logger.info { "User typed #{input}" }
+      #
+      # You'll probably stick to the second form above, unless you want to provide a
+      # program name (which you can do with #progname= as well).
+      #
+      # === Return
+      #
+      # See #add.
+      #
+      def info(progname = nil, &block)
+        add(INFO, nil, progname, &block)
+      end
+
+      #
+      # Log a +WARN+ message.
+      #
+      # See #info for more information.
+      #
+      def warn(progname = nil, &block)
+        add(WARN, nil, progname, &block)
+      end
+
+      #
+      # Log an +ERROR+ message.
+      #
+      # See #info for more information.
+      #
+      def error(progname = nil, &block)
+        add(ERROR, nil, progname, &block)
+      end
+
+      #
+      # Log a +FATAL+ message.
+      #
+      # See #info for more information.
+      #
+      def fatal(progname = nil, &block)
+        add(FATAL, nil, progname, &block)
+      end
+
       private
+      SEV_LABEL = %w(DEBUG INFO WARN ERROR FATAL ANY)
+
+      def format_severity(severity)
+        SEV_LABEL[severity] || 'ANY'
+      end
+
+      def format_severity_index(sev_label)
+        return nil unless sev_label
+        SEV_LABEL.index(sev_label.upcase)
+      end
+
       def to_msgpack(msg)
         begin
           msg.to_msgpack
