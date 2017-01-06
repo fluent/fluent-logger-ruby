@@ -10,6 +10,7 @@ class DummyFluentd
   end
 
   WAIT = ENV['WAIT'] ? ENV['WAIT'].to_f : 0.1
+  SOCKET_PATH = ENV['SOCKET_PATH'] ? ENV['SOCKET_PATH'] : "/tmp/dummy_fluent.sock"
 
   def wait_transfer
     sleep WAIT
@@ -27,6 +28,10 @@ class DummyFluentd
       end
     end
     @port
+  end
+
+  def socket_path
+    SOCKET_PATH
   end
 
   def output
@@ -51,6 +56,26 @@ class DummyFluentd
 <source>
   type forward
   port #{port}
+</source>
+<match logger-test.**>
+  type test
+</match>
+EOF
+    Fluent::Test.setup
+    Fluent::Engine.run_configure(config)
+    @coolio_default_loop = nil
+    @thread = Thread.new {
+      @coolio_default_loop = Coolio::Loop.default
+      Fluent::Engine.run
+    }
+    wait_transfer
+  end
+
+  def socket_startup
+    config = Fluent::Config.parse(<<EOF, '(logger-spec)', '(logger-spec-dir)', true)
+<source>
+  type unix
+  path #{socket_path}
 </source>
 <match logger-test.**>
   type test
