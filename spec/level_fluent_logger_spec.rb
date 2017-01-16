@@ -145,7 +145,7 @@ describe Fluent::Logger::FluentLogger do
       it ('define formatter') {
         level_logger.level = ::Logger::DEBUG
         level_logger.formatter = proc do |severity, datetime, progname, message|
-          map = { level: severity.class == Fixnum ? %w(DEBUG INFO WARN ERROR FATAL ANY)[severity] : severity }
+          map = { level: severity }
           map[:message] = message if message
           map[:progname] = progname if progname
           map[:stage] = "development"

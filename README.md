@@ -84,7 +84,7 @@ require 'fluent-logger'
 f = Fluent::Logger::LevelFluentLogger.new('fluent')
 
 f.formatter = proc do |severity, datetime, progname, message|
-  map = { level: severity.class == Fixnum ? %w(DEBUG INFO WARN ERROR FATAL ANY)[severity] : severity }
+  map = { level: severity }
   map[:message] = message if message
   map[:progname] = progname if progname
   map[:stage] = ENV['RAILS_ENV']
