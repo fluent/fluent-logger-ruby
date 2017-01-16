@@ -57,12 +57,14 @@ describe Fluent::Logger::FluentLogger do
         })
         expect(level_fluent_logger.level).to eq 0
         expect(level_fluent_logger.progname).to be_nil
+        fluentd.wait_transfer # ensure the fluentd accepted the connection
       }
 
       it ('close') {
         expect(level_logger).to be_connect
         level_logger.close
         expect(level_logger).not_to be_connect
+        fluentd.wait_transfer # ensure the fluentd accepted the connection
       }
 
       it ('reopen') {
@@ -70,6 +72,7 @@ describe Fluent::Logger::FluentLogger do
         level_logger.reopen
         expect(level_logger).not_to be_connect
         expect(level_logger.info('logger reopen test')).to be true
+        fluentd.wait_transfer # ensure the fluentd accepted the connection
       }
     end
 
