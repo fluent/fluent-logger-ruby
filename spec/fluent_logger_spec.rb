@@ -119,6 +119,8 @@ describe Fluent::Logger::FluentLogger do
         expect {
           logger.post('tag', data)
         }.to raise_error(ArgumentError)
+
+        fluentd.wait_transfer # ensure the fluentd accepted the connection
       }
     end
 
@@ -128,6 +130,7 @@ describe Fluent::Logger::FluentLogger do
         host, port = fluent_logger.instance_eval { [@host, @port] }
         expect(host).to eq 'localhost'
         expect(port).to eq fluentd.port
+        fluentd.wait_transfer # ensure the fluentd accepted the connection
       end
 
       it "hash argument" do
@@ -139,6 +142,7 @@ describe Fluent::Logger::FluentLogger do
         host, port = fluent_logger.instance_eval { [@host, @port] }
         expect(host).to eq 'localhost'
         expect(port).to eq fluentd.port
+        fluentd.wait_transfer # ensure the fluentd accepted the connection
       end
     end
   end

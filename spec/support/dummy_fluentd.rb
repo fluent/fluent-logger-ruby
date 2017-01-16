@@ -9,7 +9,7 @@ class DummyFluentd
     output.emits.clear rescue nil
   end
 
-  WAIT = ENV['WAIT'] ? ENV['WAIT'].to_f : 0.1
+  WAIT = ENV['WAIT'] ? ENV['WAIT'].to_f : 0.3
   SOCKET_PATH = ENV['SOCKET_PATH'] ? ENV['SOCKET_PATH'] : "/tmp/dummy_fluent.sock"
 
   def wait_transfer
