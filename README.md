@@ -19,6 +19,19 @@ end
 # output: myapp.access {"agent":"foo"}
 ```
 
+### UNIX socket
+
+```ruby
+require 'fluent-logger'
+
+log = Fluent::Logger::FluentLogger.new(nil, :socket_path  => "/tmp/fluent.sock")
+unless log.post("myapp.access", {"agent"=>"foo"})
+  p log.last_error # You can get last error object via last_error method
+end
+
+# output: myapp.access {"agent":"foo"}
+```
+
 ### Singleton
 ```ruby
 require 'fluent-logger'

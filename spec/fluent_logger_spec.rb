@@ -230,4 +230,44 @@ describe Fluent::Logger::FluentLogger do
       end
     end
   end
+
+  context "using socket_path" do
+
+    let(:socket_logger) {
+      @logger_io = StringIO.new
+      logger = ::Logger.new(@logger_io)
+      Fluent::Logger::FluentLogger.new('logger-test', {
+        :socket_path   => fluentd.socket_path,
+        :logger => logger,
+        :buffer_overflow_handler => buffer_overflow_handler
+      })
+    }
+
+    context "running fluentd" do
+      before(:all) do
+        @serverengine = DummyServerengine.new
+        @serverengine.startup
+      end
+
+      before(:each) do
+        fluentd.socket_startup
+      end
+
+      after(:each) do
+        fluentd.shutdown
+      end
+
+      after(:all) do
+        @serverengine.shutdown
+      end
+
+      context('post') do
+        it ('success') {
+          expect(socket_logger.post('tag', {'b' => 'a'})).to be true
+          fluentd.wait_transfer
+          expect(fluentd.queue.last).to eq ['logger-test.tag', {'b' => 'a'}]
+        }
+      end
+    end
+  end
 end

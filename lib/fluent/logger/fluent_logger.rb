@@ -54,6 +54,7 @@ module Fluent
         @tag_prefix = tag_prefix
         @host = options[:host]
         @port = options[:port]
+        @socket_path = options[:socket_path]
 
         @mon = Monitor.new
         @pending = nil
@@ -63,7 +64,6 @@ module Fluent
         @log_reconnect_error_threshold = options[:log_reconnect_error_threshold] ||  RECONNECT_WAIT_MAX_COUNT
 
         @buffer_overflow_handler = options[:buffer_overflow_handler]
-
         if logger = options[:logger]
           @logger = logger
         else
@@ -108,7 +108,7 @@ module Fluent
               send_data(@pending)
             rescue => e
               set_last_error(e)
-              @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
+              @logger.error("FluentLogger: Can't send logs to #{connection_string}: #{$!}")
               call_buffer_overflow_handler(@pending)
             end
           end
@@ -121,6 +121,18 @@ module Fluent
 
       def connect?
         @con && !@con.closed?
+      end
+
+      def create_socket!
+        if @socket_path
+          @con = UNIXSocket.new(@socket_path)
+        else
+          @con = TCPSocket.new(@host, @port)
+        end
+      end
+
+      def connection_string
+        @socket_path ? "#{@socket_path}" : "#{@host}:#{@port}"
       end
 
       private
@@ -170,7 +182,7 @@ module Fluent
           rescue => e
             set_last_error(e)
             if @pending.bytesize > @limit
-              @logger.error("FluentLogger: Can't send logs to #{@host}:#{@port}: #{$!}")
+              @logger.error("FluentLogger: Can't send logs to #{connection_string}: #{$!}")
               call_buffer_overflow_handler(@pending)
               @pending = nil
             end
@@ -203,7 +215,7 @@ module Fluent
       end
 
       def connect!
-        @con = TCPSocket.new(@host, @port)
+        create_socket!
         @con.sync = true
         @connect_error_history.clear
         @logged_reconnect_error = false
@@ -230,7 +242,7 @@ module Fluent
       end
 
       def log_reconnect_error
-        @logger.error("FluentLogger: Can't connect to #{@host}:#{@port}(#{@connect_error_history.size} retried): #{$!}")
+        @logger.error("FluentLogger: Can't connect to #{connection_string}(#{@connect_error_history.size} retried): #{$!}")
       end
 
       def set_last_error(e)
