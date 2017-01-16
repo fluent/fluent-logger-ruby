@@ -29,7 +29,7 @@ module Fluent
       RECONNECT_WAIT_INCR_RATE = 1.5
       RECONNECT_WAIT_MAX = 60
       RECONNECT_WAIT_MAX_COUNT =
-        (1..100).inject(RECONNECT_WAIT_MAX / RECONNECT_WAIT) {|r,i|
+        (1..100).inject(RECONNECT_WAIT_MAX / RECONNECT_WAIT) { |r, i|
         break i + 1 if r < RECONNECT_WAIT_INCR_RATE
         r / RECONNECT_WAIT_INCR_RATE
       }
@@ -61,7 +61,7 @@ module Fluent
         @connect_error_history = []
 
         @limit = options[:buffer_limit] || BUFFER_LIMIT
-        @log_reconnect_error_threshold = options[:log_reconnect_error_threshold] ||  RECONNECT_WAIT_MAX_COUNT
+        @log_reconnect_error_threshold = options[:log_reconnect_error_threshold] || RECONNECT_WAIT_MAX_COUNT
 
         @buffer_overflow_handler = options[:buffer_overflow_handler]
         if logger = options[:logger]
@@ -136,6 +136,7 @@ module Fluent
       end
 
       private
+
       def to_msgpack(msg)
         begin
           msg.to_msgpack

@@ -11,8 +11,8 @@ A structured event logger
 ```ruby
 require 'fluent-logger'
 
-log = Fluent::Logger::FluentLogger.new(nil, :host=>'localhost', :port=>24224)
-unless log.post("myapp.access", {"agent"=>"foo"})
+log = Fluent::Logger::FluentLogger.new(nil, :host => 'localhost', :port => 24224)
+unless log.post("myapp.access", {"agent" => "foo"})
   p log.last_error # You can get last error object via last_error method
 end
 
@@ -24,8 +24,8 @@ end
 ```ruby
 require 'fluent-logger'
 
-log = Fluent::Logger::FluentLogger.new(nil, :socket_path  => "/tmp/fluent.sock")
-unless log.post("myapp.access", {"agent"=>"foo"})
+log = Fluent::Logger::FluentLogger.new(nil, :socket_path => "/tmp/fluent.sock")
+unless log.post("myapp.access", {"agent" => "foo"})
   p log.last_error # You can get last error object via last_error method
 end
 
@@ -36,8 +36,8 @@ end
 ```ruby
 require 'fluent-logger'
 
-Fluent::Logger::FluentLogger.open(nil, :host=>'localhost', :port=>24224)
-Fluent::Logger.post("myapp.access", {"agent"=>"foo"})
+Fluent::Logger::FluentLogger.open(nil, :host => 'localhost', :port => 24224)
+Fluent::Logger.post("myapp.access", {"agent" => "foo"})
 
 # output: myapp.access {"agent":"foo"}
 ```
@@ -46,8 +46,8 @@ Fluent::Logger.post("myapp.access", {"agent"=>"foo"})
 ```ruby
 require 'fluent-logger'
 
-log = Fluent::Logger::FluentLogger.new('myapp', :host=>'localhost', :port=>24224)
-log.post("access", {"agent"=>"foo"})
+log = Fluent::Logger::FluentLogger.new('myapp', :host => 'localhost', :port => 24224)
+log.post("access", {"agent" => "foo"})
 
 # output: myapp.access {"agent":"foo"}
 ```
@@ -72,7 +72,7 @@ f.warn("some application running.")
 ```ruby
 require 'fluent-logger'
 f = Fluent::Logger::LevelFluentLogger.new('fluent')
-f.info("some_application"){"some application running."}
+f.info("some_application") {"some application running."}
 # output: fluent.info: {"level":"INFO","message":"some application running.","progname":"some_application"}
 ```
 
@@ -82,7 +82,7 @@ f.info("some_application"){"some application running."}
 require 'fluent-logger'
 f = Fluent::Logger::LevelFluentLogger.new('fluent')
 f.level = Logger::WARN
-f.info("some_application"){"some application running."}
+f.info("some_application") {"some application running."}
 ```
 
 Log level is ERROR so no output.
@@ -113,7 +113,7 @@ f.info("some_application"){"some application running."}
 
 ### Fluent
 ```ruby
-Fluent::Logger::FluentLogger.open('tag_prefix', :host=>'localhost', :port=>24224)
+Fluent::Logger::FluentLogger.open('tag_prefix', :host => 'localhost', :port => 24224)
 ```
 
 ### Console

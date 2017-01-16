@@ -237,7 +237,7 @@ describe Fluent::Logger::FluentLogger do
       @logger_io = StringIO.new
       logger = ::Logger.new(@logger_io)
       Fluent::Logger::FluentLogger.new('logger-test', {
-        :socket_path   => fluentd.socket_path,
+        :socket_path => fluentd.socket_path,
         :logger => logger,
         :buffer_overflow_handler => buffer_overflow_handler
       })

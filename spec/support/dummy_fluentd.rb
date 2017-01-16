@@ -10,7 +10,7 @@ class DummyFluentd
   end
 
   WAIT = ENV['WAIT'] ? ENV['WAIT'].to_f : 0.3
-  SOCKET_PATH = ENV['SOCKET_PATH'] ? ENV['SOCKET_PATH'] : "/tmp/dummy_fluent.sock"
+  SOCKET_PATH = ENV['SOCKET_PATH'] || "/tmp/dummy_fluent.sock"
 
   def wait_transfer
     sleep WAIT
@@ -45,7 +45,7 @@ class DummyFluentd
 
   def queue
     queue = []
-    output.emits.each {|tag, time, record|
+    output.emits.each { |tag, time, record|
       queue << [tag, record]
     }
     queue
