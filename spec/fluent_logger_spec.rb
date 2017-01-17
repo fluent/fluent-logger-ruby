@@ -58,9 +58,11 @@ describe Fluent::Logger::FluentLogger do
 
     context('post') do
       it ('success') {
+        expect(logger.pending_bytesize).to eq 0
         expect(logger.post('tag', {'a' => 'b'})).to be true
         fluentd.wait_transfer
         expect(fluentd.queue.last).to eq ['logger-test.tag', {'a' => 'b'}]
+        expect(logger.pending_bytesize).to eq 0
       }
 
       it ('close after post') {
@@ -72,6 +74,7 @@ describe Fluent::Logger::FluentLogger do
         expect(logger).to be_connect
         fluentd.wait_transfer
         expect(fluentd.queue.last).to eq ['logger-test.tag', {'b' => 'c'}]
+        expect(logger.pending_bytesize).to eq 0
       }
 
       it ('large data') {
@@ -150,9 +153,11 @@ describe Fluent::Logger::FluentLogger do
   context "not running fluentd" do
     context('fluent logger interface') do
       it ('post & close') {
+        expect(logger.pending_bytesize).to eq 0
         expect(logger.post('tag', {'a' => 'b'})).to be false
         fluentd.wait_transfer  # even if wait
         expect(fluentd.queue.last).to be_nil
+        expect(logger.pending_bytesize).to be > 0
         logger.close
         logger_io.rewind
         log = logger_io.read
@@ -204,11 +209,13 @@ describe Fluent::Logger::FluentLogger do
       let(:buffer_overflow_handler) { Proc.new { |messages| handler.flush(messages) } }
 
       it ('post limit over') do
+        expect(logger.pending_bytesize).to eq 0
         logger.limit = 100
         event_1 = {'a' => 'b'}
         logger.post('tag', event_1)
         fluentd.wait_transfer  # even if wait
         expect(fluentd.queue.last).to be(nil)
+        expect(logger.pending_bytesize).to be > 0
 
         logger_io.rewind
         expect(logger_io.read).not_to match(/Can't send logs to/)
@@ -216,6 +223,7 @@ describe Fluent::Logger::FluentLogger do
         event_2 = {'a' => ('c' * 1000)}
         logger.post('tag', event_2)
         logger_io.rewind
+        expect(logger.pending_bytesize).to eq 0
         expect(logger_io.read).to match(/Can't send logs to/)
 
         buffer = handler.buffer
