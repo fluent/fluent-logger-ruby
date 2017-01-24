@@ -55,6 +55,7 @@ module Fluent
         @host = options[:host]
         @port = options[:port]
         @socket_path = options[:socket_path]
+        @timeout = options[:timeout]
 
         @mon = Monitor.new
         @pending = nil
@@ -187,8 +188,10 @@ module Fluent
               call_buffer_overflow_handler(@pending)
               @pending = nil
             end
-            @con.close if connect?
-            @con = nil
+            unless e.instance_of?(SocketTimeoutException)
+              @con.close if connect?
+              @con = nil
+            end
             false
           end
         }
@@ -198,7 +201,12 @@ module Fluent
         unless connect?
           connect!
         end
-        @con.write data
+        if IO.select([], [@con], [], @timeout)
+          @con.write data
+        else
+          @logger.error("FluentLogger: Writing to socket timed out.")
+          raise SocketTimeoutException.new("Writing to socket timed out.")
+        end
         #while true
         #  puts "sending #{data.length} bytes"
         #  if data.length > 32*1024
