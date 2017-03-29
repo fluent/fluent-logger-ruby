@@ -1,4 +1,3 @@
-
 require 'spec_helper'
 require 'support/dummy_serverengine'
 require 'support/dummy_fluentd'
@@ -19,9 +18,15 @@ describe Fluent::Logger::FluentLogger do
       :host   => 'localhost',
       :port   => fluentd.port,
       :logger => logger,
+      :timeout => timeout,
+      :buffer_limit => buffer_limit,
       :buffer_overflow_handler => buffer_overflow_handler
     })
   }
+
+  let(:buffer_limit) { nil }
+
+  let(:timeout) { nil }
 
   let(:buffer_overflow_handler) { nil }
 
@@ -236,6 +241,34 @@ describe Fluent::Logger::FluentLogger do
         expect(buffer[1][1].to_s).to match(/\d{10}/)
         expect(buffer[1][2]).to eq(event_2)
       end
+
+      context "and fluentd is not reading" do
+
+        let(:timeout) { 1 }
+
+        let(:buffer_limit) { 20 }
+
+        before(:each) do
+          fluentd.dead_startup
+        end
+
+        after(:each) do
+          fluentd.dead_shutdown
+        end
+
+        it ('timesout if one is provided') {
+          timed_out = false
+          until handler.buffer || timed_out
+            timed_out = ! Timeout::timeout(3) {
+              logger.post('tag', {'a' => 'b'})
+            }
+          end
+          buffer = handler.buffer
+          expect(buffer).not_to be_nil
+          expect(buffer).not_to be_empty
+        }
+      end
+
     end
   end
 

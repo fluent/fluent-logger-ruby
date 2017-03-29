@@ -34,6 +34,10 @@ class DummyFluentd
     SOCKET_PATH
   end
 
+  def thread
+    @thread
+  end
+
   def output
     sleep 0.0001 # next tick
     if Fluent::Engine.respond_to?(:match)
@@ -49,6 +53,10 @@ class DummyFluentd
       queue << [tag, record]
     }
     queue
+  end
+
+  def dead_startup
+    @dead_server = TCPServer.open('localhost', port)
   end
 
   def startup
@@ -89,6 +97,10 @@ EOF
       Fluent::Engine.run
     }
     wait_transfer
+  end
+
+  def dead_shutdown
+    @dead_server.close
   end
 
   def shutdown
