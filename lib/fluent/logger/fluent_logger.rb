@@ -135,6 +135,14 @@ module Fluent
         @socket_path ? "#{@socket_path}" : "#{@host}:#{@port}"
       end
 
+      def pending_bytesize
+        if @pending
+          @pending.bytesize
+        else
+          0
+        end
+      end
+
       private
 
       def to_msgpack(msg)
@@ -170,7 +178,7 @@ module Fluent
           end
 
           # suppress reconnection burst
-          if !@connect_error_history.empty? && @pending.bytesize <= @limit
+          if !@connect_error_history.empty? && pending_bytesize <= @limit
             if Time.now.to_i - @connect_error_history.last < suppress_sec
               return false
             end
@@ -182,7 +190,7 @@ module Fluent
             true
           rescue => e
             set_last_error(e)
-            if @pending.bytesize > @limit
+            if pending_bytesize > @limit
               @logger.error("FluentLogger: Can't send logs to #{connection_string}: #{$!}")
               call_buffer_overflow_handler(@pending)
               @pending = nil
