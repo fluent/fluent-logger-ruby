@@ -12,15 +12,26 @@ describe Fluent::Logger::FluentLogger do
     DummyFluentd.new
   }
 
-  let(:logger) {
+  let(:internal_logger) {
     @logger_io = StringIO.new
-    logger = ::Logger.new(@logger_io)
-    Fluent::Logger::FluentLogger.new('logger-test', {
+    ::Logger.new(@logger_io)
+  }
+
+  let(:logger_config) {
+    {
       :host   => 'localhost',
       :port   => fluentd.port,
-      :logger => logger,
+      :logger => internal_logger,
       :buffer_overflow_handler => buffer_overflow_handler
-    })
+    }
+  }
+
+  let(:logger) {
+    Fluent::Logger::FluentLogger.new('logger-test', logger_config)
+  }
+
+  let(:logger_with_nanosec) {
+    Fluent::Logger::FluentLogger.new('logger-test', logger_config.merge(:nanosecond_precision => true))
   }
 
   let(:buffer_overflow_handler) { nil }
@@ -64,6 +75,16 @@ describe Fluent::Logger::FluentLogger do
         expect(fluentd.queue.last).to eq ['logger-test.tag', {'a' => 'b'}]
         expect(logger.pending_bytesize).to eq 0
       }
+
+      if defined?(Fluent::EventTime)
+        it ('success with nanosecond') {
+          expect(logger_with_nanosec.pending_bytesize).to eq 0
+          expect(logger_with_nanosec.post('tag', {'a' => 'b'})).to be true
+          fluentd.wait_transfer
+          expect(fluentd.queue.last).to eq ['logger-test.tag', {'a' => 'b'}]
+          expect(fluentd.output.emits.first[1]).to be_a_kind_of(Fluent::EventTime)
+        }
+      end
 
       it ('close after post') {
         expect(logger).to be_connect
