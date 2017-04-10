@@ -126,7 +126,20 @@ Fluent::Logger::ConsoleLogger.open(io)
 Fluent::Logger::NullLogger.open
 ```
 
-## Buffer overflow
+## Tips
+
+### Use nanosecond-precision time
+
+To send events with nanosecond-precision time (Fluent 0.14 and up), specify `nanosecond_precision` to `FluentLogger` constructor.
+
+```rb
+log = Fluent::Logger::FluentLogger.new(nil, :host => 'localhost', :port => 24224, :nanosecond_precision => true)
+# Use nanosecond time instead
+log.post("myapp.access", {"agent" => "foo"})
+log.post_with_time("myapp.access", {"agent" => "foo"}, Time.now) # Need Time object for post_with_time
+```
+
+### Buffer overflow
 
 You can inject your own custom proc to handle buffer overflow in the event of connection failure. This will mitigate the loss of data instead of simply throwing data away.
 
