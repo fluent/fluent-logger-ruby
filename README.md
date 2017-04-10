@@ -156,9 +156,9 @@ Fluent::Logger::FluentLogger.new(nil,
 
 |name|description|
 |---|---|
-|Web site|http://fluentd.org/|
-|Documents|http://docs.fluentd.org/|
-|Source repository|https://github.com/fluent/fluent-logger-ruby|
+|Web site|http://fluentd.org/ |
+|Documents|http://docs.fluentd.org/ |
+|Source repository|https://github.com/fluent/fluent-logger-ruby |
 |Author|Sadayuki Furuhashi|
 |Copyright|(c) 2011 FURUHASHI Sadayuki|
 |License|Apache License, Version 2.0|
