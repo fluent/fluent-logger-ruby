@@ -23,6 +23,30 @@ require 'json'
 
 module Fluent
   module Logger
+    class EventTime
+      TYPE = 0
+
+      def initialize(raw_time)
+        @time = raw_time
+      end
+
+      def to_msgpack(io = nil)
+        @time.sec.to_msgpack(io)
+      end
+
+      def to_msgpack_ext
+        [@time.sec, @time.nsec].pack('NN')
+      end
+
+      def self.from_msgpack_ext(data)
+        new(*data.unpack('NN'))
+      end
+
+      def to_json(*args)
+        @time.sec
+      end
+    end
+
     class FluentLogger < LoggerBase
       BUFFER_LIMIT = 8*1024*1024
       RECONNECT_WAIT = 0.5
@@ -55,6 +79,13 @@ module Fluent
         @host = options[:host]
         @port = options[:port]
         @socket_path = options[:socket_path]
+        @nanosecond_precision = options[:nanosecond_precision]
+
+        factory = MessagePack::Factory.new
+        if @nanosecond_precision
+          factory.register_type(EventTime::TYPE, EventTime)
+        end
+        @packer = factory.packer
 
         @mon = Monitor.new
         @pending = nil
@@ -98,7 +129,11 @@ module Fluent
       def post_with_time(tag, map, time)
         @logger.debug { "event: #{tag} #{map.to_json}" rescue nil } if @logger.debug?
         tag = "#{@tag_prefix}.#{tag}" if @tag_prefix
-        write [tag, time.to_i, map]
+        if @nanosecond_precision && time.is_a?(Time)
+          write [tag, EventTime.new(time), map]
+        else
+          write [tag, time.to_i, map]
+        end
       end
 
       def close
@@ -147,7 +182,9 @@ module Fluent
 
       def to_msgpack(msg)
         begin
-          msg.to_msgpack
+          res = @packer.pack(msg).to_s
+          @packer.clear
+          res
         rescue NoMethodError
           JSON.parse(JSON.generate(msg)).to_msgpack
         end
