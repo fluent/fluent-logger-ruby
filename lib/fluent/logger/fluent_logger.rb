@@ -81,11 +81,11 @@ module Fluent
         @socket_path = options[:socket_path]
         @nanosecond_precision = options[:nanosecond_precision]
 
-        factory = MessagePack::Factory.new
+        @factory = MessagePack::Factory.new
         if @nanosecond_precision
-          factory.register_type(EventTime::TYPE, EventTime)
+          @factory.register_type(EventTime::TYPE, EventTime)
         end
-        @packer = factory.packer
+        @packer = @factory.packer
 
         @mon = Monitor.new
         @pending = nil
@@ -182,9 +182,11 @@ module Fluent
 
       def to_msgpack(msg)
         begin
-          res = @packer.pack(msg).to_s
-          @packer.clear
-          res
+          @mon.synchronize {
+            res = @packer.pack(msg).to_s
+            @packer.clear
+            res
+          }
         rescue NoMethodError
           JSON.parse(JSON.generate(msg)).to_msgpack
         end
