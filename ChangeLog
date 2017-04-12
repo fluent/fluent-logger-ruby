@@ -1,3 +1,8 @@
+Release 0.7.0 - 2017/04/12
+
+  * Add nanosecond_precision parameter for v0.14
+  * Update msgpack dependency to v1.0
+
 Release 0.6.3 - 2017/03/29
 
   * Add pending_bytesize method
