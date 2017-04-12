@@ -31,11 +31,11 @@ module Fluent
       end
 
       def to_msgpack(io = nil)
-        @time.sec.to_msgpack(io)
+        @time.to_i.to_msgpack(io)
       end
 
       def to_msgpack_ext
-        [@time.sec, @time.nsec].pack('NN')
+        [@time.to_i, @time.nsec].pack('NN')
       end
 
       def self.from_msgpack_ext(data)
@@ -43,7 +43,7 @@ module Fluent
       end
 
       def to_json(*args)
-        @time.sec
+        @time.to_i
       end
     end
 
