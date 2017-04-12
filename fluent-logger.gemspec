@@ -30,7 +30,7 @@ EOF
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.require_paths = ['lib']
 
-  gem.add_dependency "msgpack", ">= 0.5.6", "< 2"
+  gem.add_dependency "msgpack", ">= 1.0.0", "< 2"
   gem.add_development_dependency 'rake', '>= 0.9.2'
   gem.add_development_dependency 'rspec', '>= 3.0.0'
   gem.add_development_dependency 'rspec-its', '>= 1.1.0'
