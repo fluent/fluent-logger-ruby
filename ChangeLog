@@ -1,3 +1,7 @@
+Release 0.7.1 - 2017/04/19
+
+  * Fix packer clear bug for non-msgpackable data
+
 Release 0.7.0 - 2017/04/12
 
   * Add nanosecond_precision parameter for v0.14
