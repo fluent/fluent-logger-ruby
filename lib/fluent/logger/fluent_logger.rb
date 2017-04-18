@@ -181,15 +181,15 @@ module Fluent
       private
 
       def to_msgpack(msg)
-        begin
-          @mon.synchronize {
-            res = @packer.pack(msg).to_s
-            @packer.clear
-            res
-          }
-        rescue NoMethodError
-          JSON.parse(JSON.generate(msg)).to_msgpack
-        end
+        @mon.synchronize {
+          res = begin
+                  @packer.pack(msg).to_s
+                rescue NoMethodError
+                  JSON.parse(JSON.generate(msg)).to_msgpack
+                end
+          @packer.clear
+          res
+        }
       end
 
       def suppress_sec

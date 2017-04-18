@@ -119,6 +119,19 @@ describe Fluent::Logger::FluentLogger do
         expect(logger_data['object']).to be_truthy
       }
 
+      it ('msgpack unsupport data and support data') {
+        logger.post('tag', {'time' => Time.utc(2008, 9, 1, 10, 5, 0)})
+        logger.post('tag', {'time' => '2008-09-01 10:05:00 UTC'})
+
+        fluentd.wait_transfer
+
+        logger_data1 = fluentd.queue.first.last
+        expect(logger_data1['time']).to eq '2008-09-01 10:05:00 UTC'
+
+        logger_data2 = fluentd.queue.last.last
+        expect(logger_data2['time']).to eq '2008-09-01 10:05:00 UTC'
+      }
+
       it ('msgpack and JSON unsupport data') {
         data = {
           'time'   => Time.utc(2008, 9, 1, 10, 5, 0),
