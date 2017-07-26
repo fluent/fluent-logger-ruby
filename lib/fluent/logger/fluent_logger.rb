@@ -177,7 +177,7 @@ module Fluent
 
       def pending_bytesize
         if @pending
-          @pending.bytesize
+          @pending.to_s.bytesize
         else
           0
         end
