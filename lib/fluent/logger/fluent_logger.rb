@@ -26,16 +26,17 @@ module Fluent
     class EventTime
       TYPE = 0
 
-      def initialize(raw_time)
-        @time = raw_time
+      def initialize(sec, nsec = 0)
+        @sec = sec
+        @nsec = nsec
       end
 
       def to_msgpack(io = nil)
-        @time.to_i.to_msgpack(io)
+        @sec.to_msgpack(io)
       end
 
       def to_msgpack_ext
-        [@time.to_i, @time.nsec].pack('NN')
+        [@sec, @nsec].pack('NN')
       end
 
       def self.from_msgpack_ext(data)
@@ -43,7 +44,7 @@ module Fluent
       end
 
       def to_json(*args)
-        @time.to_i
+        @sec
       end
     end
 
@@ -130,7 +131,7 @@ module Fluent
         @logger.debug { "event: #{tag} #{map.to_json}" rescue nil } if @logger.debug?
         tag = "#{@tag_prefix}.#{tag}" if @tag_prefix
         if @nanosecond_precision && time.is_a?(Time)
-          write [tag, EventTime.new(time), map]
+          write [tag, EventTime.new(time.to_i, time.nsec), map]
         else
           write [tag, time.to_i, map]
         end
