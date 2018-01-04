@@ -7,11 +7,9 @@ Gem::Specification.new do |gem|
   File.open(version_file, "w") {|f|
     f.write <<EOF
 module Fluent
-module Logger
-
-VERSION = '#{version}'
-
-end
+  module Logger
+    VERSION = '#{version}'
+  end
 end
 EOF
   }
