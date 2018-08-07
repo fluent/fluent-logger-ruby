@@ -96,8 +96,8 @@ module Fluent
         @log_reconnect_error_threshold = options[:log_reconnect_error_threshold] || RECONNECT_WAIT_MAX_COUNT
 
         @buffer_overflow_handler = options[:buffer_overflow_handler]
-        if logger = options[:logger]
-          @logger = logger
+        if options[:logger]
+          @logger = options[:logger]
         else
           @logger = ::Logger.new(STDERR)
           if options[:debug]
