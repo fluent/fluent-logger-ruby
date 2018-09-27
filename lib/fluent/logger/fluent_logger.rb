@@ -20,6 +20,8 @@ require 'socket'
 require 'monitor'
 require 'logger'
 require 'json'
+require 'base64'
+require 'securerandom'
 
 module Fluent
   module Logger
@@ -88,6 +90,9 @@ module Fluent
         end
         @packer = @factory.packer
 
+        @require_ack_response = options[:require_ack_response]
+        @ack_response_timeout = options[:ack_response_timeout] || 190
+
         @mon = Monitor.new
         @pending = nil
         @connect_error_history = []
@@ -131,9 +136,9 @@ module Fluent
         @logger.debug { "event: #{tag} #{map.to_json}" rescue nil } if @logger.debug?
         tag = "#{@tag_prefix}.#{tag}" if @tag_prefix
         if @nanosecond_precision && time.is_a?(Time)
-          write [tag, EventTime.new(time.to_i, time.nsec), map]
+          write(tag, EventTime.new(time.to_i, time.nsec), map)
         else
-          write [tag, time.to_i, map]
+          write(tag, time.to_i, map)
         end
       end
 
@@ -141,7 +146,9 @@ module Fluent
         @mon.synchronize {
           if @pending
             begin
-              send_data(@pending)
+              @pending.each do |tag, record|
+                send_data(tag, record)
+              end
             rescue => e
               set_last_error(e)
               @logger.error("FluentLogger: Can't send logs to #{connection_string}: #{$!}")
@@ -173,7 +180,7 @@ module Fluent
 
       def pending_bytesize
         if @pending
-          @pending.bytesize
+          @pending.to_s.bytesize
         else
           0
         end
@@ -201,20 +208,22 @@ module Fluent
         end
       end
 
-      def write(msg)
+      def write(tag, time, map)
         begin
-          data = to_msgpack(msg)
+          record = to_msgpack([time, map])
         rescue => e
           set_last_error(e)
+          msg = [tag, time, map]
           @logger.error("FluentLogger: Can't convert to msgpack: #{msg.inspect}: #{$!}")
           return false
         end
 
         @mon.synchronize {
           if @pending
-            @pending << data
+            @pending[tag] << record
           else
-            @pending = data
+            @pending = Hash.new{|h, k| h[k] = "" }
+            @pending[tag] = record
           end
 
           # suppress reconnection burst
@@ -225,7 +234,9 @@ module Fluent
           end
 
           begin
-            send_data(@pending)
+            @pending.each do |tag, record|
+              send_data(tag, record)
+            end
             @pending = nil
             true
           rescue => e
@@ -242,11 +253,17 @@ module Fluent
         }
       end
 
-      def send_data(data)
+      def send_data(tag, record)
         unless connect?
           connect!
         end
-        @con.write data
+        if @require_ack_response
+          option = {}
+          option['chunk'] = generate_chunk
+          @con.write [tag, record, option].to_msgpack
+        else
+          @con.write [tag, record].to_msgpack
+        end
         #while true
         #  puts "sending #{data.length} bytes"
         #  if data.length > 32*1024
@@ -260,6 +277,22 @@ module Fluent
         #  end
         #  data = data[n..-1]
         #end
+
+        if @require_ack_response && @ack_response_timeout > 0
+          if IO.select([@con], nil, nil, @ack_response_timeout)
+            raw_data = @con.recv(1024)
+
+            if raw_data.empty?
+              raise "Closed connection"
+            else
+              response = MessagePack.unpack(raw_data)
+              if response['ack'] != option['chunk']
+                raise "ack in response and chunk id in sent data are different"
+              end
+            end
+          end
+        end
+
         true
       end
 
@@ -297,6 +330,10 @@ module Fluent
       def set_last_error(e)
         # TODO: Check non GVL env
         @last_error[Thread.current.object_id] = e
+      end
+
+      def generate_chunk
+        Base64.encode64(([SecureRandom.random_number(1 << 32)] * 4).pack('NNNN')).chomp
       end
     end
   end
