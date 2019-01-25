@@ -22,9 +22,9 @@ matrix:
   exclude:
     - rvm: 2.2
       gemfile: Gemfile.v0.12
-    - rvm: 2.3.1
+    - rvm: 2.3.7
       gemfile: Gemfile.v0.12
-    - rvm: 2.4.0
+    - rvm: 2.4.5
       gemfile: Gemfile.v0.12
     - rvm: 2.5.3
       gemfile: Gemfile.v0.12
