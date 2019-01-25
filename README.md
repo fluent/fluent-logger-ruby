@@ -27,6 +27,7 @@ require 'fluent-logger'
 
 log = Fluent::Logger::FluentLogger.new(nil, :socket_path => "/tmp/fluent.sock")
 unless log.post("myapp.access", {"agent" => "foo"})
+  # Passed records are stored into logger's internal buffer so don't re-post same event.
   p log.last_error # You can get last error object via last_error method
 end
 
@@ -49,10 +50,17 @@ log.post("access", {"agent" => "foo"})
 require 'fluent-logger'
 
 log = Fluent::Logger::FluentLogger.new(nil, :host => 'localhost', :port => 24224, :use_nonblock => true, :wait_writeable => false)
+# When wait_writeable is false
 begin
   log.post("myapp.access", {"agent" => "foo"})
 rescue IO::EAGAINWaitWritable => e
   # wait code for avoding "Resource temporarily unavailable"
+  # Passed records are stored into logger's internal buffer so don't re-post same event.
+end
+
+# When wait_writeable is true
+unless log.post("myapp.access", {"agent" => "foo"})
+  # same as other example
 end
 
 # output: myapp.access {"agent":"foo"}
