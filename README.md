@@ -11,6 +11,7 @@ A structured event logger
 ```ruby
 require 'fluent-logger'
 
+# API: FluentLogger.new(tag_prefix, options)
 log = Fluent::Logger::FluentLogger.new(nil, :host => 'localhost', :port => 24224)
 unless log.post("myapp.access", {"agent" => "foo"})
   p log.last_error # You can get last error object via last_error method
@@ -32,6 +33,31 @@ end
 # output: myapp.access {"agent":"foo"}
 ```
 
+### Tag prefix
+```ruby
+require 'fluent-logger'
+
+log = Fluent::Logger::FluentLogger.new('myapp', :host => 'localhost', :port => 24224)
+log.post("access", {"agent" => "foo"})
+
+# output: myapp.access {"agent":"foo"}
+```
+
+### Nonblocking write
+
+```ruby
+require 'fluent-logger'
+
+log = Fluent::Logger::FluentLogger.new(nil, :host => 'localhost', :port => 24224, :use_nonblock => true, :wait_writeable => false)
+begin
+  log.post("myapp.access", {"agent" => "foo"})
+rescue IO::EAGAINWaitWritable => e
+  # wait code for avoding "Resource temporarily unavailable"
+end
+
+# output: myapp.access {"agent":"foo"}
+```
+
 ### Singleton
 ```ruby
 require 'fluent-logger'
@@ -42,15 +68,35 @@ Fluent::Logger.post("myapp.access", {"agent" => "foo"})
 # output: myapp.access {"agent":"foo"}
 ```
 
-### Tag prefix
-```ruby
-require 'fluent-logger'
+### Logger options
 
-log = Fluent::Logger::FluentLogger.new('myapp', :host => 'localhost', :port => 24224)
-log.post("access", {"agent" => "foo"})
+#### host (String)
 
-# output: myapp.access {"agent":"foo"}
-```
+fluentd instance host
+
+#### port (Integer)
+
+fluentd instance port
+
+#### socket_path (String)
+
+If specified, fluentd uses unix domain socket instead of TCP.
+
+#### nanosecond_precision (Bool)
+
+Use nano second event time instead of epoch. See also "Tips" section.
+
+#### use_nonblock (Bool)
+
+Use nonblocking write(`IO#write_nonblock`) instead of normal write(`IO#write`). If `Logger#post` stuck on your environment, specify `true`.
+
+#### wait_writeable (Bool)
+
+If `true`, `Logger#post` raises an error when nonblocking write gets `EAGAIN`.
+
+#### buffer_overflow_handler (Proc)
+
+Pass callback for handling buffer overflow with pending data. See "Buffer overflow" section.
 
 ### Standard ::Logger compatible interface
 
