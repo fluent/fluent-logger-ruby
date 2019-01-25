@@ -64,7 +64,8 @@ module Fluent
 
         options = {
           :host => 'localhost',
-          :port => 24224
+          :port => 24224,
+          :use_nonblock => false
         }
 
         case args.first
@@ -81,6 +82,7 @@ module Fluent
         @port = options[:port]
         @socket_path = options[:socket_path]
         @nanosecond_precision = options[:nanosecond_precision]
+        @use_nonblock = options[:use_nonblock]
 
         @factory = MessagePack::Factory.new
         if @nanosecond_precision
@@ -252,7 +254,11 @@ module Fluent
         unless connect?
           connect!
         end
-        @con.write_nonblock data
+        if @use_nonblock
+          @con.write_nonblock data
+        else
+          @con.write data
+        end
         #while true
         #  puts "sending #{data.length} bytes"
         #  if data.length > 32*1024
