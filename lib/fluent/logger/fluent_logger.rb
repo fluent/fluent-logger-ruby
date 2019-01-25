@@ -107,6 +107,9 @@ module Fluent
           end
         end
 
+        @wait_writeable = true
+        @wait_writeable = options[:wait_writeable] if options.key?(:wait_writeable)
+
         @last_error = {}
 
         begin
@@ -229,6 +232,9 @@ module Fluent
             @pending = nil
             true
           rescue => e
+            unless wait_writeable?(e)
+              raise e
+            end
             set_last_error(e)
             if pending_bytesize > @limit
               @logger.error("FluentLogger: Can't send logs to #{connection_string}: #{$!}")
@@ -246,7 +252,7 @@ module Fluent
         unless connect?
           connect!
         end
-        @con.write data
+        @con.write_nonblock data
         #while true
         #  puts "sending #{data.length} bytes"
         #  if data.length > 32*1024
@@ -297,6 +303,14 @@ module Fluent
       def set_last_error(e)
         # TODO: Check non GVL env
         @last_error[Thread.current.object_id] = e
+      end
+
+      def wait_writeable?(e)
+        if e.instance_of?(IO::EAGAINWaitWritable)
+          @wait_writeable
+        else
+          true
+        end
       end
     end
   end
