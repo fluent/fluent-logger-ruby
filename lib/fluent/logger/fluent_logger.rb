@@ -83,6 +83,7 @@ module Fluent
         @socket_path = options[:socket_path]
         @nanosecond_precision = options[:nanosecond_precision]
         @use_nonblock = options[:use_nonblock]
+        @use_ssl = options[:use_ssl]
 
         @factory = MessagePack::Factory.new
         if @nanosecond_precision
@@ -169,6 +170,13 @@ module Fluent
           @con = UNIXSocket.new(@socket_path)
         else
           @con = TCPSocket.new(@host, @port)
+          if @use_ssl
+            @ssl_context = OpenSSL::SSL::SSLContext.new()
+            ssl_socket = OpenSSL::SSL::SSLSocket.new(@con, @ssl_context)
+            ssl_socket.sync_close = true
+            ssl_socket.connect
+            @con = ssl_socket
+          end
         end
       end
 
