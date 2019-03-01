@@ -58,6 +58,47 @@ describe Fluent::Logger::FluentLogger do
       @serverengine.shutdown
     end
 
+    context('testing interaction of use_nonblock and wait_writeable') do
+      let(:tcp_socket) { instance_double('TCPSocket') }
+
+      before do
+        allow_any_instance_of(TCPSocket).to receive(:write_nonblock).and_raise(IO::EAGAINWaitWritable)
+        allow_any_instance_of(TCPSocket).to receive(:write).and_return(1)
+      end
+
+      context('use_nonblock is false') do
+        let(:block_config) { logger_config.merge(use_nonblock: false) }
+
+        it('post returns true when wait_writeable is false') {
+          cfg = block_config.merge(wait_writeable: false)
+          l = Fluent::Logger::FluentLogger.new('logger-test', cfg)
+          expect(l.post('hello', foo: 'bar')).to eq true
+        }
+
+        it('post returns true when wait_writeable is true') {
+          cfg = block_config.merge(wait_writeable: true)
+          l = Fluent::Logger::FluentLogger.new('logger-test', cfg)
+          expect(l.post('hello', {foo: 'bar'})).to eq true
+        }
+      end
+
+      context('use_nonblock is true') do
+        let(:nonblock_config) { logger_config.merge(use_nonblock: true) }
+
+        it('post raises IO::EAGAINWaitWritable when wait_writeable is false') {
+          cfg = nonblock_config.merge(wait_writeable: false)
+          l = Fluent::Logger::FluentLogger.new('logger-test', cfg)
+          expect { l.post('hello', foo: 'bar') }.to raise_error(IO::EAGAINWaitWritable)
+        }
+
+        it('post returns false when wait_writeable is true') {
+          cfg = nonblock_config.merge(wait_writeable: true)
+          l = Fluent::Logger::FluentLogger.new('logger-test', cfg)
+          expect(l.post('hello', {foo: 'bar'})).to eq false
+        }
+      end
+    end
+
     context('Post by CUI') do
       it('post') {
         args = %W(-h localhost -p #{fluentd.port} -t logger-test.tag -v a=b -v foo=bar)

@@ -96,11 +96,11 @@ Use nano second event time instead of epoch. See also "Tips" section.
 
 #### use_nonblock (Bool)
 
-Use nonblocking write(`IO#write_nonblock`) instead of normal write(`IO#write`). If `Logger#post` stuck on your environment, specify `true`.
+Use nonblocking write(`IO#write_nonblock`) instead of normal write(`IO#write`). If `Logger#post` stuck on your environment, specify `true`.  Default: `false`
 
 #### wait_writeable (Bool)
 
-If `true`, `Logger#post` raises an error when nonblocking write gets `EAGAIN`.
+If `false`, `Logger#post` raises an error when nonblocking write gets `EAGAIN` (i.e. `use_nonblock` must be `true`, otherwise this will have no effect).  Default: `true`
 
 #### buffer_overflow_handler (Proc)
 
