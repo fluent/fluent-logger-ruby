@@ -206,8 +206,11 @@ class BufferOverflowHandler
 
   def flush(messages)
     @buffer ||= []
-    MessagePack::Unpacker.new.feed_each(messages) do |msg|
-      @buffer << msg
+    messages.each do |tag, message|
+      unpacker = MessagePack::Unpacker.new(StringIO.new(message))
+      unpacker.each do |time, record|
+        @buffer << [tag, time, record]
+      end
     end
   end
 end
