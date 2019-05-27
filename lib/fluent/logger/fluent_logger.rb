@@ -272,7 +272,6 @@ module Fluent
         #  end
         #  data = data[n..-1]
         #end
-        true
       end
 
       def connect!
