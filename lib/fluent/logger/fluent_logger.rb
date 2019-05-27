@@ -230,8 +230,12 @@ module Fluent
           end
 
           begin
-            send_data(@pending)
-            @pending = nil
+            len = send_data(@pending)
+            if len != pending_bytesize
+              @pending = @pending.slice(len, pending_bytesize)
+            else
+              @pending = nil
+            end
             true
           rescue => e
             unless wait_writeable?(e)
