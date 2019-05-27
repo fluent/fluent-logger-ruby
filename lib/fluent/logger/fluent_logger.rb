@@ -126,7 +126,6 @@ module Fluent
       end
 
       attr_accessor :limit, :logger, :log_reconnect_error_threshold
-      attr_reader :last_error
 
       def last_error
         @last_error[Thread.current.object_id]
