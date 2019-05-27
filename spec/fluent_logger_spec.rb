@@ -96,6 +96,21 @@ describe Fluent::Logger::FluentLogger do
           l = Fluent::Logger::FluentLogger.new('logger-test', cfg)
           expect(l.post('hello', {foo: 'bar'})).to eq false
         }
+
+        context 'when write_nonblock returns the size less than given data' do
+          before do
+            allow_any_instance_of(TCPSocket).to receive(:write_nonblock).and_return(1)
+          end
+
+          it 'buffering data and flush at closed time' do
+            logger = Fluent::Logger::FluentLogger.new('logger-test', nonblock_config)
+            expect(logger.post('hello', foo: 'bar')).to eq(true)
+            expect(logger.pending_bytesize).not_to eq(0)
+            expect(logger).to receive(:send_data).with(String, blocking: true).once
+            logger.close
+            expect(logger.pending_bytesize).to eq(0)
+          end
+        end
       end
     end
 
