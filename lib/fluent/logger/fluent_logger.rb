@@ -146,7 +146,7 @@ module Fluent
         @mon.synchronize {
           if @pending
             begin
-              send_data(@pending)
+              send_data(@pending, blocking: true)
             rescue => e
               set_last_error(e)
               @logger.error("FluentLogger: Can't send logs to #{connection_string}: #{$!}")
@@ -254,11 +254,11 @@ module Fluent
         }
       end
 
-      def send_data(data)
+      def send_data(data, blocking: false)
         unless connect?
           connect!
         end
-        if @use_nonblock
+        if @use_nonblock && !blocking
           @con.write_nonblock data
         else
           @con.write data
