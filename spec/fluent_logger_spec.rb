@@ -58,12 +58,10 @@ describe Fluent::Logger::FluentLogger do
       @serverengine.shutdown
     end
 
-    context('testing interaction of use_nonblock and wait_writeable') do
-      let(:tcp_socket) { instance_double('TCPSocket') }
-
-      before do
+    describe('testing interaction of use_nonblock and wait_writeable') do
+      before(:example) do
         allow_any_instance_of(TCPSocket).to receive(:write_nonblock).and_raise(IO::EAGAINWaitWritable)
-        allow_any_instance_of(TCPSocket).to receive(:write).and_return(1)
+        allow_any_instance_of(TCPSocket).to receive(:write) { |_, buf| buf.size }
       end
 
       context('use_nonblock is false') do
@@ -97,17 +95,14 @@ describe Fluent::Logger::FluentLogger do
           expect(l.post('hello', {foo: 'bar'})).to eq false
         }
 
-        context 'when write_nonblock returns the size less than given data' do
+        context 'when write_nonblock returns the size less than received data' do
           before do
-            allow_any_instance_of(TCPSocket).to receive(:write_nonblock).and_return(1)
+            allow_any_instance_of(TCPSocket).to receive(:write_nonblock).and_return(1) # write 1 bytes per call
           end
 
           it 'buffering data and flush at closed time' do
             logger = Fluent::Logger::FluentLogger.new('logger-test', nonblock_config)
             expect(logger.post('hello', foo: 'bar')).to eq(true)
-            expect(logger.pending_bytesize).not_to eq(0)
-            expect(logger).to receive(:send_data).with(String, blocking: true).once
-            logger.close
             expect(logger.pending_bytesize).to eq(0)
           end
         end

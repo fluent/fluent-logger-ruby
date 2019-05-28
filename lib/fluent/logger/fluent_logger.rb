@@ -146,7 +146,7 @@ module Fluent
         @mon.synchronize {
           if @pending
             begin
-              send_data(@pending, blocking: true)
+              send_data(@pending)
             rescue => e
               set_last_error(e)
               @logger.error("FluentLogger: Can't send logs to #{connection_string}: #{$!}")
@@ -230,12 +230,12 @@ module Fluent
           end
 
           begin
-            len = send_data(@pending)
-            if len != pending_bytesize
-              @pending = @pending.slice(len, pending_bytesize)
-            else
-              @pending = nil
+            written = send_data(@pending)
+            if @pending.bytesize != written
+              raise "Actual written data size(#{written} bytes) is different from the received data size(#{@pending.bytesize} bytes)."
             end
+
+            @pending = nil
             true
           rescue => e
             unless wait_writeable?(e)
@@ -254,12 +254,12 @@ module Fluent
         }
       end
 
-      def send_data(data, blocking: false)
+      def send_data(data)
         unless connect?
           connect!
         end
-        if @use_nonblock && !blocking
-          @con.write_nonblock data
+        if @use_nonblock
+          send_data_nonblock(data)
         else
           @con.write data
         end
@@ -276,6 +276,19 @@ module Fluent
         #  end
         #  data = data[n..-1]
         #end
+      end
+
+      def send_data_nonblock(data)
+        written = @con.write_nonblock(data)
+        remaining = data.bytesize - written
+
+        while remaining > 0
+          len = @con.write_nonblock(data.byteslice(written, remaining))
+          remaining -= len
+          written += len
+        end
+
+        written
       end
 
       def connect!
