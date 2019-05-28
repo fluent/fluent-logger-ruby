@@ -229,7 +229,11 @@ module Fluent
           end
 
           begin
-            send_data(@pending)
+            written = send_data(@pending)
+            if @pending.bytesize != written
+              raise "Actual written data size(#{written} bytes) is different from the received data size(#{@pending.bytesize} bytes)."
+            end
+
             @pending = nil
             true
           rescue => e
@@ -254,7 +258,7 @@ module Fluent
           connect!
         end
         if @use_nonblock
-          @con.write_nonblock data
+          send_data_nonblock(data)
         else
           @con.write data
         end
@@ -271,7 +275,19 @@ module Fluent
         #  end
         #  data = data[n..-1]
         #end
-        true
+      end
+
+      def send_data_nonblock(data)
+        written = @con.write_nonblock(data)
+        remaining = data.bytesize - written
+
+        while remaining > 0
+          len = @con.write_nonblock(data.byteslice(written, remaining))
+          remaining -= len
+          written += len
+        end
+
+        written
       end
 
       def connect!
