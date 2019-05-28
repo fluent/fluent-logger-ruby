@@ -229,8 +229,9 @@ module Fluent
           end
 
           begin
-            send_data(@pending)
+            data_to_send = @pending
             @pending = nil
+            send_data(data_to_send)
             true
           rescue => e
             unless wait_writeable?(e)
@@ -239,8 +240,7 @@ module Fluent
             set_last_error(e)
             if pending_bytesize > @limit
               @logger.error("FluentLogger: Can't send logs to #{connection_string}: #{$!}")
-              call_buffer_overflow_handler(@pending)
-              @pending = nil
+              call_buffer_overflow_handler(data_to_send)
             end
             @con.close if connect?
             @con = nil
