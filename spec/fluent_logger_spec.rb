@@ -137,6 +137,16 @@ describe Fluent::Logger::FluentLogger do
         }
       end
 
+      context 'when the message has object which does not have #to_msgpack method' do
+        it 'success with nanosecond' do
+          expect(logger_with_nanosec.pending_bytesize).to eq(0)
+          expect(logger_with_nanosec.post('tag', 'a' => Errno::ETIMEDOUT)).to eq(true)
+          fluentd.wait_transfer
+          expect(fluentd.queue.last).to eq(['logger-test.tag', { 'a' => 'Errno::ETIMEDOUT' }])
+          expect(logger_with_nanosec.pending_bytesize).to eq(0)
+        end
+      end
+
       it ('close after post') {
         expect(logger).to be_connect
         logger.close
