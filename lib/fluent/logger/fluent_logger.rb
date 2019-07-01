@@ -44,7 +44,7 @@ module Fluent
       end
 
       def to_json(*args)
-        @sec
+        @sec.to_s
       end
     end
 
