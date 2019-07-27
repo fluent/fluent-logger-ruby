@@ -4,6 +4,22 @@
 
 A structured event logger
 
+## Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'fluent-logger'
+```
+
+And then execute:
+
+    $ bundle install
+
+Or install it yourself as:
+
+    $ gem install fluent-logger
+
 ## Examples
 
 ### Simple
