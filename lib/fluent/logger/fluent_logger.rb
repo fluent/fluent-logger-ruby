@@ -15,6 +15,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
+require 'timeout'
 require 'msgpack'
 require 'socket'
 require 'monitor'
@@ -260,7 +261,11 @@ module Fluent
         if @use_nonblock
           send_data_nonblock(data)
         else
-          @con.write data
+          _, ws = IO.select([], [@con])
+          Thread.handle_interrupt(::Timeout::Error => :never) do
+            # block timeout error during IO#write
+            ws.first.write(data)
+          end
         end
         #while true
         #  puts "sending #{data.length} bytes"
