@@ -1,3 +1,8 @@
+Release 0.8.2 - 2019/08/21
+
+  * Block timeout during IO#write to avoid writing invalid bytes
+  * Fluent::Logger::EventTime#to_json returns String
+
 Release 0.8.1 - 2019/05/30
 
   * Improve non-blocking write handling
@@ -134,4 +139,3 @@ Release 0.2.0 - 2011/08/05
 Release 0.1.0 - 2011/08/04
 
   * First release
-
