@@ -18,6 +18,7 @@
 require 'timeout'
 require 'msgpack'
 require 'socket'
+require 'openssl'
 require 'monitor'
 require 'logger'
 require 'json'
@@ -84,6 +85,7 @@ module Fluent
         @socket_path = options[:socket_path]
         @nanosecond_precision = options[:nanosecond_precision]
         @use_nonblock = options[:use_nonblock]
+        @tls_options = options[:tls_options]
 
         @factory = MessagePack::Factory.new
         if @nanosecond_precision
@@ -169,6 +171,33 @@ module Fluent
           @con = UNIXSocket.new(@socket_path)
         else
           @con = TCPSocket.new(@host, @port)
+          if @tls_options
+            context = OpenSSL::SSL::SSLContext.new
+            if @tls_options[:insecure]
+              context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+            else
+              context.set_params({})
+              context.verify_mode = OpenSSL::SSL::VERIFY_PEER
+              cert_store = OpenSSL::X509::Store.new
+              if @tls_options[:use_default_ca]
+                cert_store.set_default_paths
+              end
+              if @tls_options[:ca]
+                cert_store.add_file(@tls_options[:ca])
+              end
+
+              context.cert = OpenSSL::X509::Certificate.new(File.read(@tls_options[:cert])) if @tls_options[:cert]
+              context.key = OpenSSL::PKey::read(File.read(@tls_options[:key]), @tls_options[:key_passphrase]) if @tls_options[:key]
+              context.ciphers = @tls_options[:ciphers] || "ALL:!aNULL:!eNULL:!SSLv2".freeze
+              context.cert_store = cert_store
+            end
+            set_tls_version(context)
+
+            @con = OpenSSL::SSL::SSLSocket.new(@con, context)
+            @con.sync_close = true
+            @con.connect
+          end
+          @con
         end
       end
 
@@ -185,6 +214,16 @@ module Fluent
       end
 
       private
+
+      def set_tls_version(context)
+        if context.respond_to?(:min_version=)
+          ver = @tls_options[:version] || OpenSSL::SSL::TLS1_2_VERSION
+          context.min_version = ver
+          context.max_version = ver
+        else
+          context.ssl_version = @tls_options[:version] || :'TLSv1_2'
+        end
+      end
 
       def to_msgpack(msg)
         @mon.synchronize {

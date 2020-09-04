@@ -51,8 +51,22 @@ class DummyFluentd
     queue
   end
 
-  def startup
-    config = Fluent::Config.parse(<<EOF, '(logger-spec)', '(logger-spec-dir)', true)
+  def startup(with_tls = false)
+    if with_tls
+      config = Fluent::Config.parse(<<EOF, '(logger-spec)', '(logger-spec-dir)', true)
+<source>
+  type forward
+  port #{port}
+  <transport tls>
+    insecure true
+  </transport>
+</source>
+<match logger-test.**>
+  type test
+</match>
+EOF
+    else
+      config = Fluent::Config.parse(<<EOF, '(logger-spec)', '(logger-spec-dir)', true)
 <source>
   type forward
   port #{port}
@@ -61,6 +75,8 @@ class DummyFluentd
   type test
 </match>
 EOF
+    end
+
     Fluent::Test.setup
     Fluent::Engine.run_configure(config)
     @coolio_default_loop = nil
