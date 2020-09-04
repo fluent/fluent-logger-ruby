@@ -82,6 +82,36 @@ end
 # output: myapp.access {"agent":"foo"}
 ```
 
+### TLS setting
+
+```ruby
+require 'fluent-logger'
+
+tls_opts = {
+  :ca   => '/path/to/cacert.pem',
+  :cert => '/path/to/client-cert.pem',
+  :key  => '/path/to/client-key.pem',
+  :key_passphrase => 'test'
+}
+log = Fluent::Logger::FluentLogger.new(nil, :host => 'localhost', :port => 24224, :tls_options => tls_opts)
+```
+
+`in_forward` config example:
+
+```
+<source>
+  @type forward
+  <transport tcp>
+    version TLS1_2
+    ca_path /path/to/cacert.pem
+    cert_path /path/to/server-cert.pem
+    private_key_path /path/to/server-key.pem
+    private_key_passphrase test
+    client_cert_auth true
+  </transport>
+</source>
+```
+
 ### Singleton
 ```ruby
 require 'fluent-logger'
@@ -121,6 +151,19 @@ If `false`, `Logger#post` raises an error when nonblocking write gets `EAGAIN` (
 #### buffer_overflow_handler (Proc)
 
 Pass callback for handling buffer overflow with pending data. See "Buffer overflow" section.
+
+#### tls_options (Hash)
+
+Pass TLS related options.
+
+- use_default_ca: Set `true` if you want to use default CA
+- ca: CA file path
+- cert: Certificate file path
+- key: Private key file path
+- key_passphrase: Private key passphrase
+- version: TLS version. Default is `OpenSSL::SSL::TLS1_2_VERSION`
+- ciphers: The list of cipher suites. Default is `ALL:!aNULL:!eNULL:!SSLv2`
+- insecure: Set `true` when `in_forward` uses `insecure true`
 
 ### Standard ::Logger compatible interface
 

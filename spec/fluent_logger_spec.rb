@@ -373,4 +373,51 @@ describe Fluent::Logger::FluentLogger do
       end
     end
   end
+
+  context "running fluentd with TLS" do
+    before(:all) do
+      @serverengine = DummyServerengine.new
+      @serverengine.startup
+    end
+
+    before(:each) do
+      fluentd.startup(true)
+    end
+
+    after(:each) do
+      fluentd.shutdown
+    end
+
+    after(:all) do
+      @serverengine.shutdown
+    end
+
+    let(:logger_config) {
+      {
+        :host   => 'localhost',
+        :port   => fluentd.port,
+        :logger => internal_logger,
+        :buffer_overflow_handler => buffer_overflow_handler,
+        :tls_options => {:insecure => true}
+      }
+    }
+
+    context('post') do
+      it ('success') {
+        expect(logger.pending_bytesize).to eq 0
+        expect(logger.post('tag', {'a' => 'b'})).to be true
+        fluentd.wait_transfer
+        expect(fluentd.queue.last).to eq ['logger-test.tag', {'a' => 'b'}]
+        expect(logger.pending_bytesize).to eq 0
+      }
+
+      it ('success with nanosecond') {
+        expect(logger_with_nanosec.pending_bytesize).to eq 0
+        expect(logger_with_nanosec.post('tag', {'a' => 'b'})).to be true
+        fluentd.wait_transfer
+        expect(fluentd.queue.last).to eq ['logger-test.tag', {'a' => 'b'}]
+        expect(fluentd.output.emits.first[1]).to be_a_kind_of(Fluent::EventTime)
+      }
+    end
+  end
 end
