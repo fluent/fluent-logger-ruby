@@ -101,7 +101,7 @@ log = Fluent::Logger::FluentLogger.new(nil, :host => 'localhost', :port => 24224
 ```
 <source>
   @type forward
-  <transport tcp>
+  <transport tls>
     version TLS1_2
     ca_path /path/to/cacert.pem
     cert_path /path/to/server-cert.pem
