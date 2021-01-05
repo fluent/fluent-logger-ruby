@@ -82,6 +82,7 @@ module Fluent
         @tag_prefix = tag_prefix
         @host = options[:host]
         @port = options[:port]
+        @sockaddr = Socket.pack_sockaddr_in(@port, @host)
         @socket_path = options[:socket_path]
         @nanosecond_precision = options[:nanosecond_precision]
         @use_nonblock = options[:use_nonblock]
@@ -170,7 +171,10 @@ module Fluent
         if @socket_path
           @con = UNIXSocket.new(@socket_path)
         else
-          @con = TCPSocket.new(@host, @port)
+          # Create a TCP socket
+          @con = Socket.new(Socket::AF_INET, Socket::SOCK_STREAM)
+          @use_nonblock ? @con.connect_nonblock(@sockaddr) : @con.connect(@sockaddr)
+
           if @tls_options
             context = OpenSSL::SSL::SSLContext.new
             if @tls_options[:insecure]
@@ -195,10 +199,13 @@ module Fluent
 
             @con = OpenSSL::SSL::SSLSocket.new(@con, context)
             @con.sync_close = true
-            @con.connect
+            @use_nonblock ? @con.connect_nonblock : @con.connect
           end
           @con
         end
+      rescue IO::WaitWritable
+        # Ignore connection in process exceptions from the connect operation if being performed in a non-blocking manner
+        raise unless @use_nonblock
       end
 
       def connection_string
