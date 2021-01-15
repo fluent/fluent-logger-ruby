@@ -27,4 +27,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rspec-its', '>= 1.1.0'
   gem.add_development_dependency 'simplecov', '>= 0.5.4'
   gem.add_development_dependency 'timecop', '>= 0.3.0'
+  gem.add_development_dependency 'webrick'
 end
