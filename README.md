@@ -245,7 +245,7 @@ Fluent::Logger::NullLogger.open
 
 To send events with nanosecond-precision time (Fluent 0.14 and up), specify `nanosecond_precision` to `FluentLogger` constructor.
 
-```rb
+```ruby
 log = Fluent::Logger::FluentLogger.new(nil, :host => 'localhost', :port => 24224, :nanosecond_precision => true)
 # Use nanosecond time instead
 log.post("myapp.access", {"agent" => "foo"})
@@ -259,7 +259,7 @@ You can inject your own custom proc to handle buffer overflow in the event of co
 Your proc must accept a single argument, which will be the internal buffer of messages from the logger. A typical use-case for this would be writing to disk or possibly writing to Redis.
 
 ##### Example
-```
+```ruby
 class BufferOverflowHandler
   attr_accessor :buffer
 
