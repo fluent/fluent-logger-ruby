@@ -1,6 +1,6 @@
 # Fluent logger
 
-[![Build Status](https://travis-ci.org/fluent/fluent-logger-ruby.svg?branch=master)](https://travis-ci.org/fluent/fluent-logger-ruby)
+[![Build Status](https://github.com/fluent/fluent-logger-ruby/actions/workflows/linux.yml/badge.svg?branch=master)](https://github.com/fluent/fluent-logger-ruby/actions/workflows/linux.yml)
 
 A structured event logger
 
