@@ -382,6 +382,16 @@ describe Fluent::Logger::FluentLogger do
 
     before(:each) do
       fluentd.startup(true)
+      # Make sure to wait TLS server since preparing it takes longer time than
+      # non-TLS so that it might be too early especially on CI environment
+      3.times do
+        begin
+          TCPSocket.open('localhost', fluentd.port) {}
+          break
+        rescue
+          fluentd.wait_transfer
+        end
+      end
     end
 
     after(:each) do
