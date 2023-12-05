@@ -205,6 +205,10 @@ describe Fluent::Logger::FluentLogger do
         expect(fluentd.queue.last).to be_nil
         logger_io.rewind
         logger_io.read =~ /FluentLogger: Can't convert to msgpack:/
+
+        logger.post('tag', { 'a' => 'b' })
+        fluentd.wait_transfer
+        expect(fluentd.queue.last).to eq ['logger-test.tag', { 'a' => 'b' }]
       }
 
       it ('should raise an error when second argument is non hash object') {

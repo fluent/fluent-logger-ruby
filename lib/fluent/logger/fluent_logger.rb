@@ -231,8 +231,9 @@ module Fluent
                   @packer.pack(msg).to_s
                 rescue NoMethodError
                   JSON.parse(JSON.generate(msg)).to_msgpack
+                ensure
+                  @packer.clear
                 end
-          @packer.clear
           res
         }
       end
