@@ -25,6 +25,7 @@ jobs:
       env:
         CI: true
       run: |
-        gem install bundler rake
+        gem install rake
+        gem install bundler ${{ matrix.ruby == '2.7' && '-v 2.4.22' || '' }}
         bundle install --jobs 4 --retry 3
         bundle exec rake spec
