@@ -173,7 +173,7 @@ module Fluent
         if @socket_path
           @con = UNIXSocket.new(@socket_path)
         else
-          @con = Socket.tcp(@host, @port, connect_timeout: @connect_timeout, resolv_timeout: @resolv_timeout)
+          @con = TCPSocket.new(@host, @port, connect_timeout: @connect_timeout, resolv_timeout: @resolv_timeout)
           if @tls_options
             context = OpenSSL::SSL::SSLContext.new
             if @tls_options[:insecure]
