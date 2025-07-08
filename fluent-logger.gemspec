@@ -21,6 +21,8 @@ Gem::Specification.new do |gem|
   gem.require_paths = ['lib']
   gem.license       = "Apache-2.0"
 
+  gem.required_ruby_version = '>= 2.7'
+
   gem.add_dependency "msgpack", ">= 1.0.0", "< 2"
 
   # logger gem that isn't default gems as of Ruby 3.5

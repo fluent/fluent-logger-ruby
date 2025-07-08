@@ -115,6 +115,9 @@ module Fluent
         @wait_writeable = true
         @wait_writeable = options[:wait_writeable] if options.key?(:wait_writeable)
 
+        @connect_timeout = options[:connect_timeout]
+        @resolv_timeout = options[:resolv_timeout]
+
         @last_error = {}
 
         begin
@@ -170,7 +173,7 @@ module Fluent
         if @socket_path
           @con = UNIXSocket.new(@socket_path)
         else
-          @con = TCPSocket.new(@host, @port)
+          @con = Socket.tcp(@host, @port, connect_timeout: @connect_timeout, resolv_timeout: @resolv_timeout)
           if @tls_options
             context = OpenSSL::SSL::SSLContext.new
             if @tls_options[:insecure]
