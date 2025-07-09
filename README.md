@@ -150,11 +150,11 @@ If `false`, `Logger#post` raises an error when nonblocking write gets `EAGAIN` (
 
 #### connect_timeout (Integer)
 
-Specify timeout in seconds from connecting. Default: `nil`
+Specify timeout in seconds from connecting. This parameter is available with Ruby 3.0 or above. Default: `nil`
 
 #### resolve_timeout (Integer)
 
-Specify timeout in seconds from when the hostname resolution starts. Default: `nil`
+Specify timeout in seconds from when the hostname resolution starts. This parameter is available with Ruby 3.0 or above. Default: `nil`
 
 #### buffer_overflow_handler (Proc)
 

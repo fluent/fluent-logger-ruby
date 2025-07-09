@@ -173,7 +173,11 @@ module Fluent
         if @socket_path
           @con = UNIXSocket.new(@socket_path)
         else
-          @con = TCPSocket.new(@host, @port, connect_timeout: @connect_timeout, resolv_timeout: @resolv_timeout)
+          if supported_timeout?
+            @con = TCPSocket.new(@host, @port, connect_timeout: @connect_timeout, resolv_timeout: @resolv_timeout)
+          else
+            @con = TCPSocket.new(@host, @port)
+          end
           if @tls_options
             context = OpenSSL::SSL::SSLContext.new
             if @tls_options[:insecure]
@@ -380,6 +384,10 @@ module Fluent
         else
           true
         end
+      end
+
+      def supported_timeout?
+        @supported_timeout ||= Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('3.0.0')
       end
     end
   end
