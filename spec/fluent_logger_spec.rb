@@ -436,23 +436,12 @@ describe Fluent::Logger::FluentLogger do
     end
   end
 
-  if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('3.0.0')
-    context "timeout" do
-      it ('support connect_timeout') {
-        Timeout::timeout(5) do
-          # Use invalid IP address to make sure that the connection will timeout.
-          # (192.0.2.0 is a special IP address that can be used in only documentation. Ref. RFC 5737)
-          logger = Fluent::Logger::FluentLogger.new(nil, host: '192.0.2.0', port: fluentd.port, connect_timeout: 1)
-          expect(logger.last_error).to be_a_kind_of(IO::TimeoutError)
-        end
-      }
-      it ('support resolv_timeout') {
-        expect {
-          # It just checks that the resolv_timeout option is supported
-          # because it can't use a stub for the DNS resolution.
-          Fluent::Logger::FluentLogger.new(nil, host: 'localhost', port: fluentd.port, resolv_timeout: 1)
-        }.to_not raise_error
-      }
+  it ('support timeout') {
+    Timeout::timeout(5) do
+      # Use invalid IP address to make sure that the connection will timeout.
+      # (192.0.2.0 is a special IP address that can be used in only documentation. Ref. RFC 5737)
+      logger = Fluent::Logger::FluentLogger.new(nil, host: '192.0.2.0', port: fluentd.port, timeout: 1)
+      expect(logger.last_error).to be_a_kind_of(Timeout::Error)
     end
-  end
+  }
 end

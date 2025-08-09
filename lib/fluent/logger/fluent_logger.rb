@@ -22,6 +22,7 @@ require 'openssl'
 require 'monitor'
 require 'logger'
 require 'json'
+require 'timeout'
 
 module Fluent
   module Logger
@@ -115,8 +116,7 @@ module Fluent
         @wait_writeable = true
         @wait_writeable = options[:wait_writeable] if options.key?(:wait_writeable)
 
-        @connect_timeout = options[:connect_timeout]
-        @resolv_timeout = options[:resolv_timeout]
+        @timeout = options[:timeout] || 0
 
         @last_error = {}
 
@@ -173,10 +173,8 @@ module Fluent
         if @socket_path
           @con = UNIXSocket.new(@socket_path)
         else
-          if supported_timeout?
-            @con = TCPSocket.new(@host, @port, connect_timeout: @connect_timeout, resolv_timeout: @resolv_timeout)
-          else
-            @con = TCPSocket.new(@host, @port)
+          @con = Timeout.timeout(@timeout) do
+            TCPSocket.new(@host, @port)
           end
           if @tls_options
             context = OpenSSL::SSL::SSLContext.new
@@ -384,10 +382,6 @@ module Fluent
         else
           true
         end
-      end
-
-      def supported_timeout?
-        @supported_timeout ||= Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('3.0.0')
       end
     end
   end

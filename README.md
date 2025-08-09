@@ -148,13 +148,9 @@ Use nonblocking write(`IO#write_nonblock`) instead of normal write(`IO#write`). 
 
 If `false`, `Logger#post` raises an error when nonblocking write gets `EAGAIN` (i.e. `use_nonblock` must be `true`, otherwise this will have no effect).  Default: `true`
 
-#### connect_timeout (Integer)
+#### timeout (Integer)
 
-Specify timeout in seconds from connecting. This parameter is available with Ruby 3.0 or above. Default: `nil`
-
-#### resolv_timeout (Integer)
-
-Specify timeout in seconds from when the hostname resolution starts. This parameter is available with Ruby 3.0 or above. Default: `nil`
+Specify a timeout in seconds for connecting. Default: `0`
 
 #### buffer_overflow_handler (Proc)
 
