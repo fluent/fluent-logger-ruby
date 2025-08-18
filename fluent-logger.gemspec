@@ -22,14 +22,6 @@ Gem::Specification.new do |gem|
   gem.license       = "Apache-2.0"
 
   gem.add_dependency "msgpack", ">= 1.0.0", "< 2"
-
   # logger gem that isn't default gems as of Ruby 3.5
-  gem.add_runtime_dependency("logger", ["~> 1.6"])
-
-  gem.add_development_dependency 'rake', '>= 0.9.2'
-  gem.add_development_dependency 'rspec', '>= 3.0.0'
-  gem.add_development_dependency 'rspec-its', '>= 1.1.0'
-  gem.add_development_dependency 'simplecov', '>= 0.5.4'
-  gem.add_development_dependency 'timecop', '>= 0.3.0'
-  gem.add_development_dependency 'webrick'
+  gem.add_dependency "logger", "~> 1.6"
 end
