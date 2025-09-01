@@ -150,7 +150,7 @@ If `false`, `Logger#post` raises an error when nonblocking write gets `EAGAIN` (
 
 #### timeout (Integer)
 
-Specify a timeout in seconds for connecting. Default: `0`
+Specify a timeout in seconds for connecting. Default: `0` (Disabled)
 
 #### buffer_overflow_handler (Proc)
 
