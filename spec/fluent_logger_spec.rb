@@ -6,6 +6,7 @@ require 'support/dummy_fluentd'
 require 'logger'
 require 'stringio'
 require 'fluent/logger/fluent_logger/cui'
+require 'timeout'
 
 describe Fluent::Logger::FluentLogger do
   let(:fluentd) {
@@ -434,4 +435,13 @@ describe Fluent::Logger::FluentLogger do
       }
     end
   end
+
+  it ('support timeout') {
+    Timeout::timeout(5) do
+      # Use invalid IP address to make sure that the connection will timeout.
+      # (192.0.2.0 is a special IP address that can be used in only documentation. Ref. RFC 5737)
+      logger = Fluent::Logger::FluentLogger.new(nil, host: '192.0.2.0', port: fluentd.port, timeout: 1)
+      expect(logger.last_error).to be_a_kind_of(Timeout::Error)
+    end
+  }
 end

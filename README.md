@@ -148,6 +148,10 @@ Use nonblocking write(`IO#write_nonblock`) instead of normal write(`IO#write`). 
 
 If `false`, `Logger#post` raises an error when nonblocking write gets `EAGAIN` (i.e. `use_nonblock` must be `true`, otherwise this will have no effect).  Default: `true`
 
+#### timeout (Integer)
+
+Specify a timeout in seconds for connecting. Default: `0` (Disabled)
+
 #### buffer_overflow_handler (Proc)
 
 Pass callback for handling buffer overflow with pending data. See "Buffer overflow" section.

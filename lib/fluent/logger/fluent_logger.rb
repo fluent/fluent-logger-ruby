@@ -22,6 +22,7 @@ require 'openssl'
 require 'monitor'
 require 'logger'
 require 'json'
+require 'timeout'
 
 module Fluent
   module Logger
@@ -115,6 +116,8 @@ module Fluent
         @wait_writeable = true
         @wait_writeable = options[:wait_writeable] if options.key?(:wait_writeable)
 
+        @timeout = options[:timeout] || 0
+
         @last_error = {}
 
         begin
@@ -170,7 +173,9 @@ module Fluent
         if @socket_path
           @con = UNIXSocket.new(@socket_path)
         else
-          @con = TCPSocket.new(@host, @port)
+          @con = Timeout.timeout(@timeout) do
+            TCPSocket.new(@host, @port)
+          end
           if @tls_options
             context = OpenSSL::SSL::SSLContext.new
             if @tls_options[:insecure]
