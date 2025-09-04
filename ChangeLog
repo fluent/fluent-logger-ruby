@@ -1,3 +1,8 @@
+Release 0.10.0 - 2025/09/04
+
+  * Add timeout option (#104)
+  * gemspec: add logger gem as runtime dependency
+
 Release 0.9.1 - 2023/12/20
 
   * Fix invalid message polluting subsequent message
