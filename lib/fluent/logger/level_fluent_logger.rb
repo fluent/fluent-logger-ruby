@@ -26,7 +26,8 @@ module Fluent
     class LevelFluentLogger < ::Logger
 
       def initialize(tag_prefix = nil, *args)
-        @level = ::Logger::DEBUG
+        super(nil)
+
         @default_formatter = proc do |severity, datetime, progname, message|
           map = { level: severity }
           map[:message] = message if message
