@@ -15,6 +15,10 @@ Gem::Specification.new do |gem|
   gem.description = %q{fluent logger for ruby}
   gem.summary     = gem.description
 
+  gem.metadata['changelog_uri'] = "https://github.com/fluent/fluent-logger-ruby/blob/master/ChangeLog"
+  gem.metadata['source_code_uri'] = "https://github.com/fluent/fluent-logger-ruby"
+  gem.metadata['bug_tracker_uri'] = "https://github.com/fluent/fluent-logger-ruby/issues"
+
   gem.files         = `git ls-files`.split("\n")
   gem.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
