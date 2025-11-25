@@ -1,0 +1,7 @@
+# frozen_string_literal: true
+
+# Load common dependencies
+eval_gemfile("../Gemfile")
+
+# Add custom dependencies
+gem "activesupport"

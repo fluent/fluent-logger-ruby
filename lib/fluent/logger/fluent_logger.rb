@@ -49,6 +49,10 @@ module Fluent
       def to_json(*args)
         @sec.to_s
       end
+
+      def as_json(*args)
+        @sec
+      end
     end
 
     class FluentLogger < LoggerBase
@@ -235,7 +239,7 @@ module Fluent
           res = begin
                   @packer.pack(msg).to_s
                 rescue NoMethodError
-                  JSON.parse(JSON.generate(msg)).to_msgpack
+                  JSON.parse(msg.to_json).to_msgpack
                 ensure
                   @packer.clear
                 end
