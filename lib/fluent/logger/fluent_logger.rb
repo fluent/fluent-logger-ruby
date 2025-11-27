@@ -49,6 +49,14 @@ module Fluent
       def to_json(*args)
         @sec.to_s
       end
+
+      def as_json(*args)
+        # For ActiveSupport.
+        # By default, the custom classes are represented by their own instance variables.
+        # https://github.com/rails/rails/blob/87a9fdeef81f293cd972464686a6b4470ec642a2/activesupport/lib/active_support/core_ext/object/json.rb#L63
+        # Define it in a way that results in proper data structure when expressed in JSON
+        @sec
+      end
     end
 
     class FluentLogger < LoggerBase
@@ -235,7 +243,7 @@ module Fluent
           res = begin
                   @packer.pack(msg).to_s
                 rescue NoMethodError
-                  JSON.parse(JSON.generate(msg)).to_msgpack
+                  JSON.parse(msg.to_json).to_msgpack
                 ensure
                   @packer.clear
                 end

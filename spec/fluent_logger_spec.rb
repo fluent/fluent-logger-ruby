@@ -8,6 +8,11 @@ require 'stringio'
 require 'fluent/logger/fluent_logger/cui'
 require 'timeout'
 
+begin
+  require 'active_support/json'
+rescue LoadError
+end
+
 describe Fluent::Logger::FluentLogger do
   let(:fluentd) {
     DummyFluentd.new
@@ -176,7 +181,12 @@ describe Fluent::Logger::FluentLogger do
         logger.post('tag', data)
         fluentd.wait_transfer
         logger_data = fluentd.queue.last.last
-        expect(logger_data['time']).to eq '2008-09-01 10:05:00 UTC'
+        if defined?(ActiveSupport)
+          expect(logger_data['time']).to eq '2008-09-01T10:05:00.000Z'
+        else
+          expect(logger_data['time']).to eq '2008-09-01 10:05:00 UTC'
+        end
+
         expect(logger_data['proc']).to be_truthy
         expect(logger_data['object']).to be_truthy
       }
@@ -188,7 +198,11 @@ describe Fluent::Logger::FluentLogger do
         fluentd.wait_transfer
 
         logger_data1 = fluentd.queue.first.last
-        expect(logger_data1['time']).to eq '2008-09-01 10:05:00 UTC'
+        if defined?(ActiveSupport)
+          expect(logger_data1['time']).to eq '2008-09-01T10:05:00.000Z'
+        else
+          expect(logger_data1['time']).to eq '2008-09-01 10:05:00 UTC'
+        end
 
         logger_data2 = fluentd.queue.last.last
         expect(logger_data2['time']).to eq '2008-09-01 10:05:00 UTC'
@@ -199,13 +213,19 @@ describe Fluent::Logger::FluentLogger do
           'time'   => Time.utc(2008, 9, 1, 10, 5, 0),
           'object' => Object.new,
           'proc'   => proc { 1 },
-          'NaN'    => (0.0/0.0) # JSON don't convert
+          'NaN'    => (0.0/0.0) # JSON don't convert by default
         }
         logger.post('tag', data)
         fluentd.wait_transfer
-        expect(fluentd.queue.last).to be_nil
-        logger_io.rewind
-        logger_io.read =~ /FluentLogger: Can't convert to msgpack:/
+        if defined?(ActiveSupport)
+          # activesupport converts NaN to nil
+          # https://github.com/rails/rails/blob/90a1eaa1b30ba1f2d524e197460e549c03cf5698/activesupport/lib/active_support/core_ext/object/json.rb#L117-L118
+          expect(fluentd.queue.last).to eq ['logger-test.tag', {"NaN" => nil, "object" => {}, "proc" => {}, "time" => "2008-09-01T10:05:00.000Z"}]
+        else
+          expect(fluentd.queue.last).to be_nil
+          logger_io.rewind
+          expect(logger_io.read).to match(/FluentLogger: Can't convert to msgpack:/)
+        end
 
         logger.post('tag', { 'a' => 'b' })
         fluentd.wait_transfer
