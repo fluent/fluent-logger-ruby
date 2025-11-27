@@ -18,7 +18,7 @@ jobs:
           - activesupport
           - no-activesupport
     env:
-      BUNDLE_GEMFILE: gemfiles/${{ matrix.gemfile }}.gemfile
+      BUNDLE_GEMFILE: spec/gemfiles/${{ matrix.gemfile }}.gemfile
     name: Ruby ${{ matrix.ruby }} unit testing on ${{ matrix.os }} (${{ matrix.gemfile }})
     steps:
     - uses: actions/checkout@v4
