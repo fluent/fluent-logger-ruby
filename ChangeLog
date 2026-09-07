@@ -1,3 +1,9 @@
+Release 0.11.0 - 2026/09/07
+
+  * Add ActiveSupport Supports (#112)
+  * level_fluent_logger: call super to improve compatibility with logger (#108)
+  * Add infos to gemspec file (#110)
+
 Release 0.10.0 - 2025/09/04
 
   * Add timeout option (#104)
