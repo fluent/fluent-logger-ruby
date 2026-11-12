@@ -151,6 +151,17 @@ describe Fluent::Logger::FluentLogger do
           expect(fluentd.queue.last).to eq(['logger-test.tag', { 'a' => 'Errno::ETIMEDOUT' }])
           expect(logger_with_nanosec.pending_bytesize).to eq(0)
         end
+
+        if defined?(Fluent::EventTime)
+          it 'keeps the nanosecond event time' do
+            time = Time.at(1_500_000_000, 123_456_789, :nsec)
+            expect(logger_with_nanosec.post_with_time('tag', { 'a' => Errno::ETIMEDOUT }, time)).to eq(true)
+            fluentd.wait_transfer
+            event_time = fluentd.output.emits.first[1]
+            expect(event_time).to be_a_kind_of(Fluent::EventTime)
+            expect([event_time.sec, event_time.nsec]).to eq([1_500_000_000, 123_456_789])
+          end
+        end
       end
 
       it ('close after post') {
