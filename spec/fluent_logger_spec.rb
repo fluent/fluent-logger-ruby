@@ -7,6 +7,7 @@ require 'logger'
 require 'stringio'
 require 'fluent/logger/fluent_logger/cui'
 require 'timeout'
+require 'pathname'
 
 begin
   require 'active_support/json'
@@ -161,6 +162,13 @@ describe Fluent::Logger::FluentLogger do
             expect(event_time).to be_a_kind_of(Fluent::EventTime)
             expect([event_time.sec, event_time.nsec]).to eq([1_500_000_000, 123_456_789])
           end
+        end
+
+        it 'converts a tag that cannot be packed' do
+          logger_without_prefix = Fluent::Logger::FluentLogger.new(nil, logger_config)
+          expect(logger_without_prefix.post(Pathname.new('logger-test.tag'), 'a' => 'b')).to eq(true)
+          fluentd.wait_transfer
+          expect(fluentd.queue.last).to eq(['logger-test.tag', { 'a' => 'b' }])
         end
       end
 
