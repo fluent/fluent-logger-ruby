@@ -243,7 +243,10 @@ module Fluent
           res = begin
                   @packer.pack(msg).to_s
                 rescue NoMethodError
-                  JSON.parse(msg.to_json).to_msgpack
+                  @packer.clear
+                  tag, time, record = msg
+                  tag, record = JSON.parse([tag, record].to_json)
+                  @packer.pack([tag, time, record]).to_s
                 ensure
                   @packer.clear
                 end
